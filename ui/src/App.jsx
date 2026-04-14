@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 function App() {
   const [template, setTemplate] = useState('{{ .CommonLabels.alertname }}');
@@ -55,65 +56,58 @@ function App() {
   }, [template, data]);
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100 p-8 font-sans">
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold text-purple-400">Alertmanager Template Preview</h1>
-        <p className="text-gray-400">Test your Prometheus Alertmanager templates in real-time.</p>
+    <div className="vh-100 d-flex flex-column">
+      <header className="header">
+        <h6 className="mb-0 fw-bold me-4">Alertmanager Template Preview</h6>
+        <button className="btn-run" onClick={handleRender} disabled={loading}>
+          {loading ? 'Running...' : 'Run'}
+        </button>
       </header>
 
-      <main className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="space-y-6">
-          <section>
-            <h2 className="text-xl font-semibold mb-2 flex items-center">
-              <span className="bg-purple-600 rounded-full w-6 h-6 flex items-center justify-center text-sm mr-2">1</span>
-              Template
-            </h2>
-            <textarea
-              className="w-full h-48 bg-gray-800 border border-gray-700 rounded-lg p-4 font-mono text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none transition-all"
-              value={template}
-              onChange={(e) => setTemplate(e.target.value)}
-              placeholder="Enter your template here..."
-            />
-          </section>
-
-          <section>
-            <h2 className="text-xl font-semibold mb-2 flex items-center">
-              <span className="bg-purple-600 rounded-full w-6 h-6 flex items-center justify-center text-sm mr-2">2</span>
-              Alert Data (JSON)
-            </h2>
-            <textarea
-              className="w-full h-64 bg-gray-800 border border-gray-700 rounded-lg p-4 font-mono text-sm focus:ring-2 focus:ring-purple-500 focus:outline-none transition-all"
-              value={data}
-              onChange={(e) => setData(e.target.value)}
-              placeholder="Enter alert data JSON here..."
-            />
-          </section>
+      <main className="main-container">
+        <div className="left-panel">
+          <div className="top-pane">
+            <div className="editor-pane">
+              <div className="editor-label">Template</div>
+              <textarea
+                className="editor-textarea"
+                value={template}
+                onChange={(e) => setTemplate(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="bottom-pane">
+            <div className="editor-pane border-top-0">
+              <div className="editor-label">Alert Data (JSON)</div>
+              <textarea
+                className="editor-textarea"
+                value={data}
+                onChange={(e) => setData(e.target.value)}
+              />
+            </div>
+          </div>
         </div>
-
-        <div className="flex flex-col h-full">
-          <h2 className="text-xl font-semibold mb-2 flex items-center">
-            <span className="bg-green-600 rounded-full w-6 h-6 flex items-center justify-center text-sm mr-2">3</span>
-            Preview Result
-            {loading && <span className="ml-4 text-sm text-gray-500 animate-pulse italic">Rendering...</span>}
-          </h2>
-          <div className="flex-grow min-h-[400px] bg-gray-800 border border-gray-700 rounded-lg p-6 overflow-auto shadow-inner relative">
-            {error ? (
-              <div className="bg-red-900/50 border border-red-700 text-red-200 p-4 rounded-md">
-                <strong className="block font-bold mb-1">Rendering Error</strong>
-                <pre className="whitespace-pre-wrap text-sm">{error}</pre>
-              </div>
-            ) : (
-              <div className="prose prose-invert max-w-none h-full">
-                <pre className="whitespace-pre-wrap font-mono text-sm bg-transparent p-0">{result || '(empty output)'}</pre>
-              </div>
-            )}
+        <div className="right-panel">
+          <div className="editor-pane border-start-0">
+            <div className="editor-label">
+              Result
+              {loading && <small className="text-success ms-2 italic">Rendering...</small>}
+            </div>
+            <div className="preview-content">
+              {error ? (
+                <div className="alert alert-danger mb-0 rounded-0 border-0">
+                  <strong className="d-block mb-1">Rendering Error</strong>
+                  <pre className="mb-0 text-break" style={{whiteSpace: 'pre-wrap'}}>{error}</pre>
+                </div>
+              ) : (
+                <div className="preview-result">
+                  <pre className="mb-0">{result || '(empty output)'}</pre>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </main>
-      
-      <footer className="mt-12 pt-8 border-t border-gray-800 text-center text-gray-500 text-sm">
-        Built with Go 1.26, React, and urfave/cli v3.
-      </footer>
     </div>
   )
 }
