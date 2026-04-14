@@ -21,6 +21,7 @@ This is a structured Knowledge Base for the Alertmanager Template Preview projec
     - **Templates**: Parsing of Go template error strings (line:column) from the backend to show indicators in the UI.
 - **YAML Support**: The backend uses `github.com/goccy/go-yaml` for unmarshaling alert data. This library is used because it correctly respects `json` struct tags (which are present in `prometheus/alertmanager/template.Data`), allowing both YAML and JSON input to be parsed into the same Go structures.
 - **Automatic Rendering**: Debounced (500ms) automatic rendering on every change in Template or Alert Data fields. Manual "Run" button was removed to provide a more seamless experience.
+- **CodeMirror Height**: To ensure the editor scroller takes up the full container height (preventing it from shrinking with short content), set `.cm-scroller { height: 100% !important; }` and ensure `.cm-editor` is also `height: 100%`. This keeps the horizontal scrollbar at the bottom of the editor pane.
 
 ### Known Issues & Solutions
 - **404 on Assets in Production**:

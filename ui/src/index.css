@@ -97,6 +97,10 @@ body, html, #root {
   height: 100%;
 }
 
+.cm-scroller {
+  height: 100% !important;
+}
+
 .editor-container {
   flex-grow: 1;
   overflow: hidden;
