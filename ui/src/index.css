@@ -101,9 +101,19 @@ body, html, #root {
   height: 100% !important;
 }
 
+.cm-content, .cm-gutters {
+  min-height: 100% !important;
+}
+
 .editor-container {
   flex-grow: 1;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.editor-container > div {
+  height: 100%;
 }
 
 .badge-error {
