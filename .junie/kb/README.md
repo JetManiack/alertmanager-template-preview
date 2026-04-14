@@ -19,6 +19,7 @@ This is a structured Knowledge Base for the Alertmanager Template Preview projec
 - **Error Highlighting**:
     - **JSON**: Real-time validation in the frontend with a visual indicator.
     - **Templates**: Parsing of Go template error strings (line:column) from the backend to show indicators in the UI.
+- **Automatic Rendering**: Debounced (500ms) automatic rendering on every change in Template or Alert Data fields. Manual "Run" button was removed to provide a more seamless experience.
 
 ### Known Issues & Solutions
 - **404 on Assets in Production**:

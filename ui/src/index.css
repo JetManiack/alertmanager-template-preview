@@ -49,19 +49,6 @@ body, html, #root {
   font-weight: bold;
 }
 
-.btn-run {
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  padding: 2px 15px;
-  border-radius: 4px;
-  margin-left: 20px;
-  font-weight: bold;
-}
-
-.btn-run:hover {
-  background-color: #45a049;
-}
 
 .theme-toggle {
   cursor: pointer;

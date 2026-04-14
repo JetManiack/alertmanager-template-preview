@@ -116,9 +116,6 @@ function App() {
         <div className="container-fluid d-flex align-items-center justify-content-between">
           <div className="d-flex align-items-center">
             <h6 className="mb-0 header-title me-4">Alertmanager Template Preview</h6>
-            <button className="btn-run" onClick={handleRender} disabled={loading || !!jsonError}>
-              {loading ? 'Running...' : 'Run'}
-            </button>
           </div>
           <button className="theme-toggle" onClick={toggleTheme} title="Toggle Dark/Light Mode">
             {theme === 'light' ? <MoonStarsFill size={18} /> : <SunFill size={18} />}
