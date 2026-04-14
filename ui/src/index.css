@@ -8,49 +8,45 @@ body, html, #root {
   display: flex;
   flex-direction: column;
   height: 100%;
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--bs-border-color);
 }
 
 .editor-label {
-  background-color: #f8f9fa;
+  background-color: var(--bs-tertiary-bg);
   padding: 4px 12px;
   font-size: 0.8rem;
   font-weight: 600;
   text-transform: uppercase;
-  color: #6c757d;
-  border-bottom: 1px solid #dee2e6;
+  color: var(--bs-secondary-color);
+  border-bottom: 1px solid var(--bs-border-color);
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
-
-.editor-textarea {
-  flex-grow: 1;
-  border: none;
-  resize: none;
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 13px;
-  padding: 10px;
-  outline: none;
 }
 
 .preview-content {
   flex-grow: 1;
   padding: 15px;
   overflow: auto;
-  background-color: #fff;
+  background-color: var(--bs-body-bg);
   font-family: 'Courier New', Courier, monospace;
   font-size: 13px;
   white-space: pre-wrap;
+  color: var(--bs-body-color);
 }
 
 .header {
   height: 40px;
-  background-color: #1c2128;
-  color: #fff;
+  background-color: var(--bs-body-bg);
+  border-bottom: 1px solid var(--bs-border-color);
   display: flex;
   align-items: center;
   padding: 0 15px;
+}
+
+.header-title {
+  color: var(--bs-body-color);
+  font-weight: bold;
 }
 
 .btn-run {
@@ -65,6 +61,24 @@ body, html, #root {
 
 .btn-run:hover {
   background-color: #45a049;
+}
+
+.theme-toggle {
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--bs-secondary-color);
+  transition: background-color 0.2s;
+  border: none;
+  background: transparent;
+}
+
+.theme-toggle:hover {
+  background-color: var(--bs-tertiary-bg);
+  color: var(--bs-body-color);
 }
 
 .main-container {
@@ -88,4 +102,23 @@ body, html, #root {
 
 .bottom-pane {
   height: 50%;
+}
+
+/* Custom styles for CodeMirror */
+.cm-editor {
+  font-size: 13px;
+  height: 100%;
+}
+
+.editor-container {
+  flex-grow: 1;
+  overflow: hidden;
+}
+
+.badge-error {
+  font-size: 0.7rem;
+  background-color: var(--bs-danger);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 10px;
 }

@@ -1,7 +1,14 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import 'bootstrap/dist/css/bootstrap.min.css';
+import CodeMirror from '@uiw/react-codemirror';
+import { json } from '@codemirror/lang-json';
+import { StreamLanguage } from '@codemirror/language';
+import { go } from '@codemirror/legacy-modes/mode/go';
+import { vscodeDark, vscodeLight } from '@uiw/codemirror-theme-vscode';
+import { SunFill, MoonStarsFill, ExclamationTriangleFill } from 'react-bootstrap-icons';
 
 function App() {
+  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
   const [template, setTemplate] = useState('{{ .CommonLabels.alertname }}');
   const [data, setData] = useState(JSON.stringify({
     receiver: "webhook",
@@ -19,11 +26,57 @@ function App() {
     groupLabels: { alertname: "HighCPU" },
     externalURL: "http://prometheus.example.com"
   }, null, 2));
+  
   const [result, setResult] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [jsonError, setJsonError] = useState(null);
 
-  const handleRender = async () => {
+  // Parse template error to get location
+  const templateError = useMemo(() => {
+    if (!error) return null;
+    // Go template errors look like: template: :1:12: ...
+    const match = error.match(/template: :(\d+):(\d+):/);
+    if (match) {
+      return {
+        line: parseInt(match[1]),
+        column: parseInt(match[2]),
+        message: error
+      };
+    }
+    return null;
+  }, [error]);
+
+  // Apply theme to document
+  useEffect(() => {
+    document.documentElement.setAttribute('data-bs-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  // JSON Validation
+  useEffect(() => {
+    try {
+      if (data.trim() === '') {
+        setJsonError('Data cannot be empty');
+        return;
+      }
+      JSON.parse(data);
+      setJsonError(null);
+    } catch (err) {
+      setJsonError(err.message);
+    }
+  }, [data]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
+
+  const handleRender = useCallback(async () => {
+    if (jsonError) {
+      setError('Cannot render: Invalid JSON in Alert Data');
+      return;
+    }
+
     setLoading(true);
     setError('');
     try {
@@ -35,55 +88,98 @@ function App() {
         body: JSON.stringify({ template, data }),
       });
 
-      const json = await response.json();
+      const jsonResponse = await response.json();
       if (response.ok) {
-        setResult(json.result);
+        setResult(jsonResponse.result);
       } else {
-        setError(json.error || 'Failed to render template');
+        setError(jsonResponse.error || 'Failed to render template');
       }
     } catch (err) {
       setError('Connection error: ' + err.message);
     } finally {
       setLoading(false);
     }
-  };
+  }, [template, data, jsonError]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       handleRender();
     }, 500);
     return () => clearTimeout(timer);
-  }, [template, data]);
+  }, [handleRender]);
+
+  const cmTheme = theme === 'dark' ? vscodeDark : vscodeLight;
 
   return (
     <div className="vh-100 d-flex flex-column">
       <header className="header">
-        <h6 className="mb-0 fw-bold me-4">Alertmanager Template Preview</h6>
-        <button className="btn-run" onClick={handleRender} disabled={loading}>
-          {loading ? 'Running...' : 'Run'}
-        </button>
+        <div className="container-fluid d-flex align-items-center justify-content-between">
+          <div className="d-flex align-items-center">
+            <h6 className="mb-0 header-title me-4">Alertmanager Template Preview</h6>
+            <button className="btn-run" onClick={handleRender} disabled={loading || !!jsonError}>
+              {loading ? 'Running...' : 'Run'}
+            </button>
+          </div>
+          <button className="theme-toggle" onClick={toggleTheme} title="Toggle Dark/Light Mode">
+            {theme === 'light' ? <MoonStarsFill size={18} /> : <SunFill size={18} />}
+          </button>
+        </div>
       </header>
 
       <main className="main-container">
         <div className="left-panel">
           <div className="top-pane">
             <div className="editor-pane">
-              <div className="editor-label">Template</div>
-              <textarea
-                className="editor-textarea"
-                value={template}
-                onChange={(e) => setTemplate(e.target.value)}
-              />
+              <div className="editor-label">
+                <span>Template</span>
+                {templateError && (
+                  <span className="badge-error" title={templateError.message}>
+                    <ExclamationTriangleFill className="me-1" />
+                    Syntax Error: Line {templateError.line}
+                  </span>
+                )}
+              </div>
+              <div className="editor-container">
+                <CodeMirror
+                  value={template}
+                  height="100%"
+                  theme={cmTheme}
+                  extensions={[StreamLanguage.define(go)]}
+                  onChange={(value) => setTemplate(value)}
+                  basicSetup={{
+                    lineNumbers: true,
+                    foldGutter: true,
+                    highlightActiveLine: true,
+                  }}
+                />
+              </div>
             </div>
           </div>
           <div className="bottom-pane">
             <div className="editor-pane border-top-0">
-              <div className="editor-label">Alert Data (JSON)</div>
-              <textarea
-                className="editor-textarea"
-                value={data}
-                onChange={(e) => setData(e.target.value)}
-              />
+              <div className="editor-label">
+                <span>Alert Data (JSON)</span>
+                {jsonError && (
+                  <span className="badge-error" title={jsonError}>
+                    <ExclamationTriangleFill className="me-1" />
+                    Invalid JSON
+                  </span>
+                )}
+              </div>
+              <div className="editor-container">
+                <CodeMirror
+                  value={data}
+                  height="100%"
+                  theme={cmTheme}
+                  extensions={[json()]}
+                  onChange={(value) => setData(value)}
+                  basicSetup={{
+                    lineNumbers: true,
+                    foldGutter: true,
+                    highlightActiveLine: true,
+                  }}
+                />
+              </div>
             </div>
           </div>
         </div>

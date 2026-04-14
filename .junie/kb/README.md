@@ -11,6 +11,14 @@ This is a structured Knowledge Base for the Alertmanager Template Preview projec
 - **IDE Layout (jsfiddle-style)**: Implemented a 3-pane layout for Template, Alert Data (JSON), and Result.
 - **Gin Static Serving**: When using `r.StaticFS("/ui", ...)` and a redirect from `/` to `/ui/`, ensure no conflicting routes like `r.GET("/ui/", ...)` are manually registered, as `StaticFS` already handles directory root requests.
 - **Vite Base Path**: When serving the UI under a prefix (e.g., `/ui`), the `base` configuration in `vite.config.js` must match that prefix (e.g., `base: '/ui/'`). Otherwise, the browser will attempt to load assets from the root path, leading to 404 errors.
+- **Code Editor**: Replaced standard `textarea` with `CodeMirror 6` (via `@uiw/react-codemirror`) to provide syntax highlighting, line numbers, and better user experience.
+- **Syntax Highlighting**:
+    - **JSON**: Uses `@codemirror/lang-json` with built-in validation.
+    - **Go Templates**: Uses `@codemirror/legacy-modes/mode/go` as a close approximation for highlighting.
+- **Theme Switching**: Implemented using Bootstrap 5's `data-bs-theme` attribute and CodeMirror's theme system (`@uiw/codemirror-theme-vscode`). Theme preference is persisted in `localStorage`.
+- **Error Highlighting**:
+    - **JSON**: Real-time validation in the frontend with a visual indicator.
+    - **Templates**: Parsing of Go template error strings (line:column) from the backend to show indicators in the UI.
 
 ### Known Issues & Solutions
 - **404 on Assets in Production**:
