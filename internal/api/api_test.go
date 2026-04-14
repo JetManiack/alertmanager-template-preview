@@ -31,10 +31,10 @@ func TestRenderHandler(t *testing.T) {
 			wantBody:   "TestAlert",
 		},
 		{
-			name: "Invalid JSON data",
+			name: "Invalid YAML data",
 			body: map[string]any{
 				"template": "{{ .CommonLabels.alertname }}",
-				"data":     `{invalid}`,
+				"data":     `*invalid_alias`,
 			},
 			wantStatus: http.StatusBadRequest,
 			wantBody:   "",

@@ -1,16 +1,16 @@
 package template
 
 import (
-	"encoding/json"
 	"fmt"
 
+	"github.com/goccy/go-yaml"
 	"github.com/prometheus/alertmanager/template"
 )
 
-// Render parses the Alertmanager template and renders it using the provided JSON alert data.
-func Render(tmplStr string, jsonData string) (string, error) {
+// Render parses the Alertmanager template and renders it using the provided YAML/JSON alert data.
+func Render(tmplStr string, dataStr string) (string, error) {
 	var data template.Data
-	if err := json.Unmarshal([]byte(jsonData), &data); err != nil {
+	if err := yaml.Unmarshal([]byte(dataStr), &data); err != nil {
 		return "", fmt.Errorf("failed to unmarshal alert data: %w", err)
 	}
 

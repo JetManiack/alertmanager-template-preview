@@ -26,6 +26,13 @@ func TestRender(t *testing.T) {
 			expected: "TESTALERT",
 			wantErr:  false,
 		},
+		{
+			name:     "YAML data render",
+			tmpl:     "{{ .CommonLabels.alertname }}",
+			data:     "commonLabels:\n  alertname: YAMLAlert",
+			expected: "YAMLAlert",
+			wantErr:  false,
+		},
 	}
 
 	for _, tt := range tests {

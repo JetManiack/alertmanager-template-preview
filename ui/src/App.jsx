@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import CodeMirror from '@uiw/react-codemirror';
-import { json } from '@codemirror/lang-json';
+import { yaml } from '@codemirror/lang-yaml';
 import { StreamLanguage } from '@codemirror/language';
 import { go } from '@codemirror/legacy-modes/mode/go';
 import { vscodeDark, vscodeLight } from '@uiw/codemirror-theme-vscode';
 import { SunFill, MoonStarsFill, ExclamationTriangleFill } from 'react-bootstrap-icons';
+import jsYaml from 'js-yaml';
 
 function App() {
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
@@ -30,7 +31,7 @@ function App() {
   const [result, setResult] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [jsonError, setJsonError] = useState(null);
+  const [dataError, setDataError] = useState(null);
 
   // Parse template error to get location
   const templateError = useMemo(() => {
@@ -53,17 +54,17 @@ function App() {
     localStorage.setItem('theme', theme);
   }, [theme]);
 
-  // JSON Validation
+  // YAML/JSON Validation
   useEffect(() => {
     try {
       if (data.trim() === '') {
-        setJsonError('Data cannot be empty');
+        setDataError('Data cannot be empty');
         return;
       }
-      JSON.parse(data);
-      setJsonError(null);
+      jsYaml.load(data);
+      setDataError(null);
     } catch (err) {
-      setJsonError(err.message);
+      setDataError(err.message);
     }
   }, [data]);
 
@@ -72,8 +73,8 @@ function App() {
   };
 
   const handleRender = useCallback(async () => {
-    if (jsonError) {
-      setError('Cannot render: Invalid JSON in Alert Data');
+    if (dataError) {
+      setError('Cannot render: Invalid YAML/JSON in Alert Data');
       return;
     }
 
@@ -99,7 +100,7 @@ function App() {
     } finally {
       setLoading(false);
     }
-  }, [template, data, jsonError]);
+  }, [template, data, dataError]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -155,11 +156,11 @@ function App() {
           <div className="bottom-pane">
             <div className="editor-pane border-top-0">
               <div className="editor-label">
-                <span>Alert Data (JSON)</span>
-                {jsonError && (
-                  <span className="badge-error" title={jsonError}>
+                <span>Alert Data (YAML/JSON)</span>
+                {dataError && (
+                  <span className="badge-error" title={dataError}>
                     <ExclamationTriangleFill className="me-1" />
-                    Invalid JSON
+                    Invalid YAML/JSON
                   </span>
                 )}
               </div>
@@ -168,7 +169,7 @@ function App() {
                   value={data}
                   height="100%"
                   theme={cmTheme}
-                  extensions={[json()]}
+                  extensions={[yaml()]}
                   onChange={(value) => setData(value)}
                   basicSetup={{
                     lineNumbers: true,
