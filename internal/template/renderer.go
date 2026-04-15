@@ -11,10 +11,18 @@ import (
 
 // Render parses the template and renders it using the provided YAML/JSON data, based on the mode.
 func Render(tmplStr string, dataStr string, mode string, prometheusURL string) (string, error) {
-	if mode == "prometheus" {
+	switch mode {
+	case "prometheus":
 		return RenderPrometheus(tmplStr, dataStr, prometheusURL)
+	case "alertmanager":
+		return RenderAlertmanager(tmplStr, dataStr)
+	default:
+		return RenderAlertmanager(tmplStr, dataStr)
 	}
+}
 
+// RenderAlertmanager parses and renders an Alertmanager notification template.
+func RenderAlertmanager(tmplStr string, dataStr string) (string, error) {
 	var data template.Data
 	if err := yaml.Unmarshal([]byte(dataStr), &data); err != nil {
 		return "", fmt.Errorf("failed to unmarshal alert data: %w", err)
@@ -32,6 +40,11 @@ func Render(tmplStr string, dataStr string, mode string, prometheusURL string) (
 			"humanize1024":       humanize1024,
 			"humanizeTimestamp":  humanizeTimestamp,
 			"humanizePercentage": humanizePercentage,
+			"date":               date,
+			"tz":                 tz,
+			"list":               list,
+			"append":             appendFunc,
+			"dict":               dict,
 		})
 	})
 	if err != nil {
