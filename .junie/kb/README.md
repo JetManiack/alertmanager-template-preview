@@ -60,6 +60,15 @@ This is a structured Knowledge Base for the Alertmanager Template Preview projec
     - **Stage 2 (Backend)**: Uses `golang:1.26-alpine` to build the Go server, incorporating the built UI assets from Stage 1 into the `assets/ui/dist` directory.
     - **Stage 3 (Final)**: Uses a slim `alpine:latest` image containing only the compiled binary and necessary certificates/timezone data.
     - **Configuration**: The container exposes port 8080 by default and accepts CLI arguments for Prometheus integration (e.g., `-p http://host.docker.internal:9090`).
+- **CI/CD and Automation**: Implemented automated workflows for CI and Docker deployment.
+    - **`ci.yml`**: Runs on every push and PR to `main`.
+        - **Backend**: Executes `make test` and `make vet` using Go 1.24.
+        - **Frontend**: Executes `npm install` and `npm run lint` in the `ui` directory using Node.js LTS.
+    - **`docker-publish.yml`**: Adapted from standard project templates (e.g., `coins`).
+        - **Trigger**: Runs on pushes to `main` and on version tags (`v*`).
+        - **Process**: Builds a multi-stage Docker image and pushes it to Docker Hub and GitHub Container Registry (GHCR).
+        - **Metadata**: Uses `docker/metadata-action` to automatically tag images based on branch, PR, or semver tags.
+        - **Multi-platform**: Prepared for multi-platform builds using `setup-qemu` and `setup-buildx`.
 
 ### Known Issues & Solutions
 - **404 on Assets in Production**:

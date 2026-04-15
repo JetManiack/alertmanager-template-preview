@@ -113,7 +113,7 @@ function App() {
   const parsedData = useMemo(() => {
     try {
       return jsYaml.load(currentData);
-    } catch (e) {
+    } catch {
       return null;
     }
   }, [currentData]);

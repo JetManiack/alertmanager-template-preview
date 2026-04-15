@@ -26,3 +26,4 @@ dist/
 # Project specific
 assets/ui/dist/
 ui/dist/
+.output.txt
