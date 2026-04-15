@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"math"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -44,10 +43,17 @@ func RenderPrometheus(tmplStr string, dataStr string, prometheusURL string) (str
 			re := regexp.MustCompile(pattern)
 			return re.ReplaceAllString(text, repl)
 		},
+		"date":               date,
+		"tz":                 tz,
+		"since":              time.Since,
+		"list":               list,
+		"append":             appendFunc,
+		"dict":               dict,
+		"urlUnescape":        url.QueryUnescape,
 		"humanize":           humanize,
 		"humanize1024":       humanize1024,
 		"humanizeDuration":   templates.HumanizeDuration,
-		"humanizeTimestamp":  templates.HumanizeTimestamp,
+		"humanizeTimestamp":  humanizeTimestamp,
 		"humanizePercentage": humanizePercentage,
 		"query": func(q string) (any, error) {
 			if prometheusURL == "" {
@@ -95,15 +101,11 @@ func RenderPrometheus(tmplStr string, dataStr string, prometheusURL string) (str
 				return nil, fmt.Errorf("label: expected sample, got %T", v)
 			}
 		},
-		"round":  round,
-		"toJS":   toJson,
-		"toJson": toJson,
-		"toTime": toTime,
-		"safeHtml": func(s string) any {
-			// This is just a placeholder since we are not using html/template.
-			// In text/template it's basically a no-op that returns the string.
-			return s
-		},
+		"round":      round,
+		"toJS":       toJson,
+		"toJson":     toJson,
+		"toTime":     toTime,
+		"toDuration": toDuration,
 	}
 
 	tmpl, err := tmpltext.New("prometheus").Funcs(funcs).Parse(tmplStr)
@@ -213,78 +215,4 @@ func queryPrometheus(baseURL, q string) ([]QueryResultSample, error) {
 	}
 
 	return samples, nil
-}
-
-func round(v any) (float64, error) {
-	f, err := templates.ConvertToFloat(v)
-	if err != nil {
-		return 0, err
-	}
-	return math.Round(f), nil
-}
-
-func toTime(v any) (time.Time, error) {
-	f, err := templates.ConvertToFloat(v)
-	if err != nil {
-		return time.Time{}, err
-	}
-	return time.Unix(0, int64(math.Round(f*1000))*1e6).UTC(), nil
-}
-
-func toJson(v any) (string, error) {
-	b, err := json.Marshal(v)
-	if err != nil {
-		return "", err
-	}
-	return string(b), nil
-}
-
-func humanizePercentage(v any) (string, error) {
-	f, err := templates.ConvertToFloat(v)
-	if err != nil {
-		return "", err
-	}
-	return fmt.Sprintf("%.4g%%", f*100), nil
-}
-
-func humanize(v any) (string, error) {
-	f, err := templates.ConvertToFloat(v)
-	if err != nil {
-		return "", err
-	}
-	if math.IsNaN(f) || math.IsInf(f, 0) {
-		return fmt.Sprintf("%.4g", f), nil
-	}
-	if math.Abs(f) < 1 {
-		return fmt.Sprintf("%.4g", f), nil
-	}
-
-	units := []string{"", "k", "M", "G", "T", "P", "E"}
-	i := 0
-	for math.Abs(f) >= 1000 && i < len(units)-1 {
-		f /= 1000
-		i++
-	}
-	return strconv.FormatFloat(f, 'g', 4, 64) + units[i], nil
-}
-
-func humanize1024(v any) (string, error) {
-	f, err := templates.ConvertToFloat(v)
-	if err != nil {
-		return "", err
-	}
-	if math.IsNaN(f) || math.IsInf(f, 0) {
-		return fmt.Sprintf("%.4g", f), nil
-	}
-	if math.Abs(f) < 1 {
-		return fmt.Sprintf("%.4g", f), nil
-	}
-
-	units := []string{"", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei"}
-	i := 0
-	for math.Abs(f) >= 1024 && i < len(units)-1 {
-		f /= 1024
-		i++
-	}
-	return strconv.FormatFloat(f, 'g', 4, 64) + units[i], nil
 }

@@ -7,7 +7,6 @@ import (
 
 	"github.com/goccy/go-yaml"
 	"github.com/prometheus/alertmanager/template"
-	commonTemplates "github.com/prometheus/common/helpers/templates"
 )
 
 // Render parses the template and renders it using the provided YAML/JSON data, based on the mode.
@@ -26,11 +25,12 @@ func Render(tmplStr string, dataStr string, mode string, prometheusURL string) (
 		text.Funcs(tmpltext.FuncMap{
 			"round":              round,
 			"toTime":             toTime,
+			"toDuration":         toDuration,
 			"toJson":             toJson,
 			"toJS":               toJson,
 			"humanize":           humanize,
 			"humanize1024":       humanize1024,
-			"humanizeTimestamp":  commonTemplates.HumanizeTimestamp,
+			"humanizeTimestamp":  humanizeTimestamp,
 			"humanizePercentage": humanizePercentage,
 		})
 	})
