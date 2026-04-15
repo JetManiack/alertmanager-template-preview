@@ -1,0 +1,7 @@
+# .dockerignore
+.git
+bin
+ui/node_modules
+ui/dist
+assets/ui/dist
+*.log

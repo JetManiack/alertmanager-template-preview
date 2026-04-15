@@ -55,6 +55,11 @@ This is a structured Knowledge Base for the Alertmanager Template Preview projec
     - **Markdown**: Renders the result as Markdown using `react-markdown` and `remark-gfm`.
     - **Persistence**: The selected `previewMode` is saved in `localStorage`.
     - **Layout**: Added a compact `Nav` switcher in the "Result" pane header to toggle between modes.
+- **Dockerization**: Implemented a multi-stage Dockerfile to simplify deployment.
+    - **Stage 1 (Frontend)**: Uses `node:lts-alpine` to build the React application.
+    - **Stage 2 (Backend)**: Uses `golang:1.26-alpine` to build the Go server, incorporating the built UI assets from Stage 1 into the `assets/ui/dist` directory.
+    - **Stage 3 (Final)**: Uses a slim `alpine:latest` image containing only the compiled binary and necessary certificates/timezone data.
+    - **Configuration**: The container exposes port 8080 by default and accepts CLI arguments for Prometheus integration (e.g., `-p http://host.docker.internal:9090`).
 
 ### Known Issues & Solutions
 - **404 on Assets in Production**:
