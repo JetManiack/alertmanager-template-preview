@@ -52,6 +52,10 @@ This is a structured Knowledge Base for the Alertmanager Template Preview projec
 ### Planned Features & Architecture Ideas
 - **Prometheus Real Integration**:
     - **Backend Proxy (Implemented)**: Added `--prometheus-url` (or `-p`) CLI flag. Template functions `query`, `first`, `last`, `value`, and `label` now make real HTTP calls to the Prometheus API.
+    - **API Response Handling**: Updated the Prometheus API response decoder to handle different `resultType` values.
+        - **Vector**: Decodes a list of samples with metrics and values.
+        - **Scalar**: Decodes a single value (e.g., from `time()`) and wraps it into a single `QueryResultSample` for consistency.
+        - **Technical Detail**: Uses `json.RawMessage` for the `result` field in the API response struct to allow conditional unmarshaling based on the `resultType` string.
     - **Caching**: Currently, requests are not cached. Each `query` call in a template triggers a new HTTP request.
 
 ### Successful Patterns

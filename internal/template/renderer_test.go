@@ -80,3 +80,20 @@ func TestRenderWithQuery(t *testing.T) {
 		t.Errorf("Render() got = %q, want %q", got, expected)
 	}
 }
+
+func TestRenderWithQueryScalar(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, `{"status":"success","data":{"resultType":"scalar","result":[1617181717.333,"123.45"]}}`)
+	}))
+	defer ts.Close()
+
+	tmpl := `{{ query "time()" | first | value }}`
+	got, err := Render(tmpl, `{}`, "prometheus", ts.URL)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	expected := "123.45"
+	if got != expected {
+		t.Errorf("Render() got = %q, want %q", got, expected)
+	}
+}

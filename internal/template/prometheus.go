@@ -124,11 +124,8 @@ type QueryResultSample struct {
 type prometheusAPIResponse struct {
 	Status string `json:"status"`
 	Data   struct {
-		ResultType string `json:"resultType"`
-		Result     []struct {
-			Metric map[string]string `json:"metric"`
-			Value  []any             `json:"value"`
-		} `json:"result"`
+		ResultType string          `json:"resultType"`
+		Result     json.RawMessage `json:"result"`
 	} `json:"data"`
 	ErrorType string `json:"errorType"`
 	Error     string `json:"error"`
@@ -158,18 +155,58 @@ func queryPrometheus(baseURL, q string) ([]QueryResultSample, error) {
 		return nil, fmt.Errorf("prometheus error: %s (%s)", apiResp.Error, apiResp.ErrorType)
 	}
 
-	samples := make([]QueryResultSample, len(apiResp.Data.Result))
-	for i, r := range apiResp.Data.Result {
-		samples[i].Labels = r.Metric
-		if len(r.Value) >= 2 {
-			valStr, ok := r.Value[1].(string)
-			if ok {
-				val, err := strconv.ParseFloat(valStr, 64)
-				if err == nil {
-					samples[i].Value = val
+	var samples []QueryResultSample
+	switch apiResp.Data.ResultType {
+	case "vector":
+		var vector []struct {
+			Metric map[string]string `json:"metric"`
+			Value  []any             `json:"value"`
+		}
+		if err := json.Unmarshal(apiResp.Data.Result, &vector); err != nil {
+			return nil, err
+		}
+		samples = make([]QueryResultSample, len(vector))
+		for i, v := range vector {
+			samples[i].Labels = v.Metric
+			if len(v.Value) >= 2 {
+				valStr, ok := v.Value[1].(string)
+				if ok {
+					val, err := strconv.ParseFloat(valStr, 64)
+					if err == nil {
+						samples[i].Value = val
+					}
 				}
 			}
 		}
+	case "scalar":
+		var scalar []any
+		if err := json.Unmarshal(apiResp.Data.Result, &scalar); err != nil {
+			return nil, err
+		}
+		if len(scalar) >= 2 {
+			valStr, ok := scalar[1].(string)
+			if ok {
+				val, err := strconv.ParseFloat(valStr, 64)
+				if err == nil {
+					samples = []QueryResultSample{{Value: val}}
+				}
+			}
+		}
+	case "matrix":
+		return nil, fmt.Errorf("result type matrix is not supported in the 'query' function yet")
+	case "string":
+		var strResult []any
+		if err := json.Unmarshal(apiResp.Data.Result, &strResult); err != nil {
+			return nil, err
+		}
+		if len(strResult) >= 2 {
+			// Prometheus string results aren't directly usable as samples with values,
+			// but we can return them as a sample with Value 0 and labels if needed,
+			// or just error out as it's not common in templates.
+			return nil, fmt.Errorf("result type string is not supported")
+		}
+	default:
+		return nil, fmt.Errorf("unknown result type: %s", apiResp.Data.ResultType)
 	}
 
 	return samples, nil
