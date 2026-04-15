@@ -7,13 +7,11 @@ bin/
 *.dylib
 
 # Go
-go.sum
 *.test
 *.out
 
 # Node
 node_modules/
-dist/
 .npm
 .cache
 
@@ -24,6 +22,7 @@ dist/
 *.swo
 
 # Project specific
-assets/ui/dist/
+assets/ui/dist/*
+!assets/ui/dist/.keep
 ui/dist/
 .output.txt

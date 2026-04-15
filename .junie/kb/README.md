@@ -80,6 +80,12 @@ This is a structured Knowledge Base for the Alertmanager Template Preview projec
     - **Symptom**: UI loads but assets (`/assets/index-...`) return 404.
     - **Cause**: Assets are linked relative to the root, but the server is set up to serve them under `/ui`.
     - **Fix**: Add `base: '/ui/'` to `ui/vite.config.js` and rebuild.
+- **Go Test Failures in CI (Missing go.sum and assets)**:
+    - **Symptom**: `go test ./...` fails with `missing go.sum entry` and `pattern all:ui/dist: no matching files found`.
+    - **Cause**: `go.sum` was mistakenly added to `.gitignore`, and the `assets/ui/dist` directory was ignored by Git, causing `go:embed` to fail when the UI hadn't been built yet.
+    - **Fix**: 
+        1. Remove `go.sum` from `.gitignore` and run `go mod tidy`.
+        2. Create an empty `.keep` file in `assets/ui/dist/` and add an exception for it in `.gitignore` (`!assets/ui/dist/.keep`). This ensures the directory exists for `go:embed` even if the UI hasn't been built.
 - **Prometheus Query Mocking (Deprecated)**:
     - **Issue**: Initial attempt to implement `query` with manual mocks proved inflexible.
     - **Action**: Rolled back mock implementation.
