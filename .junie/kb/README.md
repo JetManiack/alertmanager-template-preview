@@ -39,12 +39,22 @@ This is a structured Knowledge Base for the Alertmanager Template Preview projec
         - **Tabs**: A tab switcher in the header allows users to switch between modes. Each mode's template and data are persisted independently in `localStorage`.
     - **YAML Support**: The backend uses `github.com/goccy/go-yaml` for unmarshaling alert data. This library is used because it correctly respects `json` struct tags (which are present in `prometheus/alertmanager/template.Data`), allowing both YAML and JSON input to be parsed into the same Go structures.
 - **Automatic Rendering**: Debounced (500ms) automatic rendering on every change in Template or Alert Data fields. Manual "Run" button was removed to provide a more seamless experience.
-- **Backend Refactoring**: The main `Render` function in `internal/template/renderer.go` uses a `switch` statement to dispatch to mode-specific renderers (`RenderPrometheus` or `RenderAlertmanager`). This improves maintainability and allows for cleaner separation of concerns between different template engines.
+- **Backend File Structure**: Refactored the `internal/template` package to improve maintainability and separate concerns:
+    - `renderer.go`: Contains the main `Render` dispatcher.
+    - `alertmanager.go`: Contains `RenderAlertmanager` logic and Alertmanager-specific template initialization.
+    - `prometheus.go`: Contains `RenderPrometheus` logic and Prometheus API integration.
+    - `functions.go`: Contains shared template functions (e.g., `humanize`, `toTime`, `round`) used across all modes.
 - **CodeMirror Height**: To ensure the editor scroller takes up the full container height (preventing it from shrinking with short content), set `.cm-scroller { height: 100% !important; }` and `.cm-content, .cm-gutters { min-height: 100% !important; }`. Also ensure `.cm-editor` and its parent `.editor-container` are correctly expanded to 100% height. This keeps the horizontal scrollbar at the bottom of the editor pane regardless of content length.
 - **Resizable Panels**: Implemented using `react-resizable-panels` (version 4+).
     - **Layout Persistence**: Proportions of panels are saved in `localStorage` using the `useDefaultLayout` hook with unique `id`s for horizontal and vertical groups. This ensures that the user's preferred workspace layout is preserved between sessions.
     - **Custom Styling**: The `Separator` component is styled with `resize-handle-horizontal/vertical` classes, using Bootstrap's border color by default and the primary color when hovered or active.
     - **Structure**: Uses a nested `Group` approach to separate the Template/Data editors from the Result preview.
+- **Preview Rendering Types**: Added support for different preview modes in the UI:
+    - **Text**: Displays the raw rendered string (default).
+    - **HTML**: Renders the result as HTML using `dangerouslySetInnerHTML`. This is useful for previewing Alertmanager email templates.
+    - **Markdown**: Renders the result as Markdown using `react-markdown` and `remark-gfm`.
+    - **Persistence**: The selected `previewMode` is saved in `localStorage`.
+    - **Layout**: Added a compact `Nav` switcher in the "Result" pane header to toggle between modes.
 
 ### Known Issues & Solutions
 - **404 on Assets in Production**:

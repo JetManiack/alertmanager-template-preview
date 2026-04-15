@@ -10,6 +10,8 @@ import { go } from '@codemirror/legacy-modes/mode/go';
 import { vscodeDark, vscodeLight } from '@uiw/codemirror-theme-vscode';
 import { SunFill, MoonStarsFill, ExclamationTriangleFill } from 'react-bootstrap-icons';
 import jsYaml from 'js-yaml';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { createTemplateCompletionSource } from './completions';
 
 const DEFAULT_AM_DATA = JSON.stringify({
@@ -45,6 +47,7 @@ function App() {
   
   const [promTemplate, setPromTemplate] = useState(localStorage.getItem('promTemplate') || 'Alert {{ .Labels.alertname }} value is {{ .Value | humanize }}');
   const [promData, setPromData] = useState(localStorage.getItem('promData') || DEFAULT_PROM_DATA);
+  const [previewMode, setPreviewMode] = useState(localStorage.getItem('previewMode') || 'text');
   
   const currentTemplate = mode === 'alertmanager' ? amTemplate : promTemplate;
   const currentData = mode === 'alertmanager' ? amData : promData;
@@ -88,6 +91,10 @@ function App() {
     localStorage.setItem('promTemplate', promTemplate);
     localStorage.setItem('promData', promData);
   }, [promTemplate, promData]);
+
+  useEffect(() => {
+    localStorage.setItem('previewMode', previewMode);
+  }, [previewMode]);
 
   // YAML/JSON Validation
   useEffect(() => {
@@ -259,9 +266,22 @@ function App() {
           <Separator className="resize-handle-horizontal" />
           <Panel defaultSize={50} minSize={20}>
             <div className="editor-pane h-100">
-              <div className="editor-label">
-                Result
-                {loading && <small className="text-success ms-2 italic">Rendering...</small>}
+              <div className="editor-label d-flex align-items-center justify-content-between">
+                <div>
+                  Result
+                  {loading && <small className="text-success ms-2 italic">Rendering...</small>}
+                </div>
+                <Nav variant="pills" activeKey={previewMode} onSelect={(k) => setPreviewMode(k)} className="preview-nav">
+                  <Nav.Item>
+                    <Nav.Link eventKey="text">Text</Nav.Link>
+                  </Nav.Item>
+                  <Nav.Item>
+                    <Nav.Link eventKey="html">HTML</Nav.Link>
+                  </Nav.Item>
+                  <Nav.Item>
+                    <Nav.Link eventKey="markdown">Markdown</Nav.Link>
+                  </Nav.Item>
+                </Nav>
               </div>
               <div className="preview-content">
                 {error ? (
@@ -270,8 +290,18 @@ function App() {
                     <pre className="mb-0 text-break" style={{whiteSpace: 'pre-wrap'}}>{error}</pre>
                   </div>
                 ) : (
-                  <div className="preview-result">
-                    <pre className="mb-0">{result || '(empty output)'}</pre>
+                  <div className={`preview-result ${previewMode}-mode`}>
+                    {previewMode === 'text' && (
+                      <pre className="mb-0">{result || '(empty output)'}</pre>
+                    )}
+                    {previewMode === 'html' && (
+                      <div className="html-preview" dangerouslySetInnerHTML={{ __html: result || '<i>(empty output)</i>' }} />
+                    )}
+                    {previewMode === 'markdown' && (
+                      <div className="markdown-preview">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{result || '*(empty output)*'}</ReactMarkdown>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

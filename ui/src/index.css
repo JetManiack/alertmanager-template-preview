@@ -26,12 +26,8 @@ body, html, #root {
 
 .preview-content {
   flex-grow: 1;
-  padding: 15px;
   overflow: auto;
   background-color: var(--bs-body-bg);
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 13px;
-  white-space: pre-wrap;
   color: var(--bs-body-color);
 }
 
@@ -130,4 +126,38 @@ body, html, #root {
   color: white;
   padding: 2px 6px;
   border-radius: 10px;
+}
+
+.preview-nav .nav-link {
+  padding: 2px 8px;
+  font-size: 0.7rem;
+  text-transform: none;
+  line-height: 1;
+}
+
+.preview-result.text-mode {
+  padding: 15px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 13px;
+  white-space: pre-wrap;
+}
+
+.preview-result.html-mode, .preview-result.markdown-mode {
+  padding: 15px;
+}
+
+.markdown-preview h1, .markdown-preview h2, .markdown-preview h3 {
+  border-bottom: 1px solid var(--bs-border-color);
+  padding-bottom: 0.3em;
+}
+
+.markdown-preview table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.markdown-preview th, .markdown-preview td {
+  border: 1px solid var(--bs-border-color);
+  padding: 6px 13px;
 }
