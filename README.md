@@ -8,8 +8,8 @@ A web application for previewing Prometheus Alertmanager templates.
 
 ## Documentation
 Index of project documentation:
--   [Architecture Overview](docs/architecture.md) (TBD)
--   [Development Roadmap](docs/roadmap.md) (TBD)
+-   [Architecture Overview](docs/architecture.md)
+-   [Development Roadmap](docs/roadmap.md)
 -   [Deployment Guide](docs/deployment.md)
 
 ## Getting Started
