@@ -7,7 +7,7 @@ const alertmanagerFuncs = [
 const prometheusFuncs = [
   "toUpper", "toLower", "title", "trimSpace", "join", "match", "reReplaceAll",
   "humanize", "humanize1024", "humanizeDuration", "humanizeTimestamp", "humanizePercentage",
-  "query", "first", "last", "value"
+  "query", "first", "last", "value", "label"
 ].map(name => ({ label: name, type: "function" }));
 
 const alertmanagerFields = [
@@ -29,7 +29,7 @@ const kvMethods = [
 ].map(name => ({ label: name, type: "method" }));
 
 const prometheusFields = [
-  "Labels", "ExternalLabels", "ExternalURL", "Value"
+  "Labels", "ExternalLabels", "ExternalURL", "Value", "Queries"
 ].map(name => ({ label: name, type: "variable" }));
 
 // All possible variable completions (without leading dot)
@@ -78,6 +78,7 @@ export function createTemplateCompletionSource(alertData, mode = 'alertmanager')
         if (isProm) {
           if (field === "Labels" && alertData?.labels) source = alertData.labels;
           else if (field === "ExternalLabels" && alertData?.externalLabels) source = alertData.externalLabels;
+          else if (field === "Queries" && alertData?.queries) source = alertData.queries;
         } else {
           if (field === "CommonLabels" && alertData?.commonLabels) source = alertData.commonLabels;
           else if (field === "GroupLabels" && alertData?.groupLabels) source = alertData.groupLabels;
