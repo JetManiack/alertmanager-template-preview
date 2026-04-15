@@ -55,6 +55,7 @@ This is a structured Knowledge Base for the Alertmanager Template Preview projec
     - **API Response Handling**: Updated the Prometheus API response decoder to handle different `resultType` values.
         - **Vector**: Decodes a list of samples with metrics and values.
         - **Scalar**: Decodes a single value (e.g., from `time()`) and wraps it into a single `QueryResultSample` for consistency.
+        - **Time Handling**: Added `toTime` function to convert floating-point timestamps (from `value`) into Go `time.Time` objects. To avoid floating point precision issues in nanoseconds, values are rounded to milliseconds: `time.Unix(0, int64(math.Round(f*1000))*1e6)`.
         - **Technical Detail**: Uses `json.RawMessage` for the `result` field in the API response struct to allow conditional unmarshaling based on the `resultType` string.
     - **Caching**: Currently, requests are not cached. Each `query` call in a template triggers a new HTTP request.
 

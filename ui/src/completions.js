@@ -7,7 +7,7 @@ const alertmanagerFuncs = [
 const prometheusFuncs = [
   "toUpper", "toLower", "title", "trimSpace", "join", "match", "reReplaceAll",
   "humanize", "humanize1024", "humanizeDuration", "humanizeTimestamp", "humanizePercentage",
-  "query", "first", "last", "value"
+  "query", "first", "last", "value", "toTime"
 ].map(name => ({ label: name, type: "function" }));
 
 const alertmanagerFields = [

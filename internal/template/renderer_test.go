@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -95,5 +96,19 @@ func TestRenderWithQueryScalar(t *testing.T) {
 	expected := "123.45"
 	if got != expected {
 		t.Errorf("Render() got = %q, want %q", got, expected)
+	}
+}
+
+func TestRenderWithToTime(t *testing.T) {
+	tmpl := `{{ 1617181717.333 | toTime }}`
+	got, err := Render(tmpl, `{}`, "prometheus", "")
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	// We expect the result to contain the basic time string.
+	// Floating point precision might lead to slight variations in nanoseconds output.
+	expectedPrefix := "2021-03-31 09:08:37.333"
+	if !strings.Contains(got, expectedPrefix) {
+		t.Errorf("Render() got = %q, want prefix %q", got, expectedPrefix)
 	}
 }

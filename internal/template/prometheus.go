@@ -101,6 +101,13 @@ func RenderPrometheus(tmplStr string, dataStr string, prometheusURL string) (str
 				return nil, fmt.Errorf("label: expected sample, got %T", v)
 			}
 		},
+		"toTime": func(v any) (time.Time, error) {
+			f, err := templates.ConvertToFloat(v)
+			if err != nil {
+				return time.Time{}, err
+			}
+			return time.Unix(0, int64(math.Round(f*1000))*1e6).UTC(), nil
+		},
 	}
 
 	tmpl, err := tmpltext.New("prometheus").Funcs(funcs).Parse(tmplStr)
