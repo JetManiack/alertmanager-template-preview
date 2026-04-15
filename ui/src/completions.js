@@ -4,6 +4,12 @@ const alertmanagerFuncs = [
   "since", "humanizeDuration", "toJson", "list", "append", "dict"
 ].map(name => ({ label: name, type: "function" }));
 
+const prometheusFuncs = [
+  "toUpper", "toLower", "title", "trimSpace", "join", "match", "reReplaceAll",
+  "humanize", "humanize1024", "humanizeDuration", "humanizeTimestamp", "humanizePercentage",
+  "query", "first", "last", "value"
+].map(name => ({ label: name, type: "function" }));
+
 const alertmanagerFields = [
   "Receiver", "Status", "Alerts", "NotificationReason", 
   "GroupLabels", "CommonLabels", "CommonAnnotations", "ExternalURL"
@@ -22,18 +28,33 @@ const kvMethods = [
   "SortedPairs", "Names", "Values"
 ].map(name => ({ label: name, type: "method" }));
 
+const prometheusFields = [
+  "Labels", "ExternalLabels", "ExternalURL", "Value"
+].map(name => ({ label: name, type: "variable" }));
+
 // All possible variable completions (without leading dot)
-const allFieldCompletions = [...alertmanagerFields, ...alertFields, ...alertsMethods, ...kvMethods];
+const amAllFieldCompletions = [...alertmanagerFields, ...alertFields, ...alertsMethods, ...kvMethods];
+const promAllFieldCompletions = [...prometheusFields];
 
 // All possible variable completions with a leading dot for "no-dot" contexts
-const allDottedCompletions = allFieldCompletions.map(c => ({
+const amAllDottedCompletions = amAllFieldCompletions.map(c => ({
   ...c,
   label: "." + c.label,
-  // We want to filter by the name without the dot if they haven't typed the dot yet
   filterText: c.label 
 }));
 
-export function createTemplateCompletionSource(alertData) {
+const promAllDottedCompletions = promAllFieldCompletions.map(c => ({
+  ...c,
+  label: "." + c.label,
+  filterText: c.label 
+}));
+
+export function createTemplateCompletionSource(alertData, mode = 'alertmanager') {
+  const isProm = mode === 'prometheus';
+  const funcs = isProm ? prometheusFuncs : alertmanagerFuncs;
+  const allFieldCompletions = isProm ? promAllFieldCompletions : amAllFieldCompletions;
+  const allDottedCompletions = isProm ? promAllDottedCompletions : amAllDottedCompletions;
+
   return (context) => {
     // Match a word before the cursor (including a dot)
     let word = context.matchBefore(/\.?\w*/);
@@ -47,16 +68,21 @@ export function createTemplateCompletionSource(alertData) {
     
     if (startsWithDot) {
       // Possible nested path: .Field.SubField
-      // We need to check what is BEFORE the current word (which starts with a dot)
       const beforeWord = context.state.sliceDoc(0, word.from);
       const parentMatch = beforeWord.match(/\.(\w+)$/);
       
       if (parentMatch) {
         const field = parentMatch[1];
         let source = null;
-        if (field === "CommonLabels" && alertData?.commonLabels) source = alertData.commonLabels;
-        else if (field === "GroupLabels" && alertData?.groupLabels) source = alertData.groupLabels;
-        else if (field === "CommonAnnotations" && alertData?.commonAnnotations) source = alertData.commonAnnotations;
+        
+        if (isProm) {
+          if (field === "Labels" && alertData?.labels) source = alertData.labels;
+          else if (field === "ExternalLabels" && alertData?.externalLabels) source = alertData.externalLabels;
+        } else {
+          if (field === "CommonLabels" && alertData?.commonLabels) source = alertData.commonLabels;
+          else if (field === "GroupLabels" && alertData?.groupLabels) source = alertData.groupLabels;
+          else if (field === "CommonAnnotations" && alertData?.commonAnnotations) source = alertData.commonAnnotations;
+        }
         
         if (source) {
           const keys = Object.keys(source).map(key => ({
@@ -85,7 +111,7 @@ export function createTemplateCompletionSource(alertData) {
     return {
       from: word.from,
       to: context.pos,
-      options: [...alertmanagerFuncs, ...allDottedCompletions],
+      options: [...funcs, ...allDottedCompletions],
       validFor: /^\w*$/
     };
   };

@@ -26,9 +26,20 @@ func TestRenderHandler(t *testing.T) {
 			body: map[string]any{
 				"template": "{{ .CommonLabels.alertname }}",
 				"data":     `{"commonLabels": {"alertname": "TestAlert"}}`,
+				"mode":     "alertmanager",
 			},
 			wantStatus: http.StatusOK,
 			wantBody:   "TestAlert",
+		},
+		{
+			name: "Prometheus render",
+			body: map[string]any{
+				"template": "{{ .Value | humanize }}",
+				"data":     `{"value": 1000}`,
+				"mode":     "prometheus",
+			},
+			wantStatus: http.StatusOK,
+			wantBody:   "1k",
 		},
 		{
 			name: "Invalid YAML data",

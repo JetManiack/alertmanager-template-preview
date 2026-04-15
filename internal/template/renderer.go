@@ -7,8 +7,12 @@ import (
 	"github.com/prometheus/alertmanager/template"
 )
 
-// Render parses the Alertmanager template and renders it using the provided YAML/JSON alert data.
-func Render(tmplStr string, dataStr string) (string, error) {
+// Render parses the template and renders it using the provided YAML/JSON data, based on the mode.
+func Render(tmplStr string, dataStr string, mode string) (string, error) {
+	if mode == "prometheus" {
+		return RenderPrometheus(tmplStr, dataStr)
+	}
+
 	var data template.Data
 	if err := yaml.Unmarshal([]byte(dataStr), &data); err != nil {
 		return "", fmt.Errorf("failed to unmarshal alert data: %w", err)

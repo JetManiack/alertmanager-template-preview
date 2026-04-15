@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { Nav } from 'react-bootstrap';
 import CodeMirror from '@uiw/react-codemirror';
 import { autocompletion } from '@codemirror/autocomplete';
 import { yaml } from '@codemirror/lang-yaml';
@@ -10,26 +11,43 @@ import { SunFill, MoonStarsFill, ExclamationTriangleFill } from 'react-bootstrap
 import jsYaml from 'js-yaml';
 import { createTemplateCompletionSource } from './completions';
 
+const DEFAULT_AM_DATA = JSON.stringify({
+  receiver: "webhook",
+  status: "firing",
+  alerts: [
+    {
+      status: "firing",
+      labels: { alertname: "HighCPU", severity: "critical" },
+      annotations: { summary: "CPU is high" },
+      startsAt: "2023-01-01T00:00:00Z"
+    }
+  ],
+  commonLabels: { alertname: "HighCPU" },
+  commonAnnotations: { summary: "CPU is high" },
+  groupLabels: { alertname: "HighCPU" },
+  externalURL: "http://prometheus.example.com"
+}, null, 2);
+
+const DEFAULT_PROM_DATA = JSON.stringify({
+  labels: { alertname: "HighCPU", instance: "localhost:9090" },
+  externalLabels: { region: "us-east-1" },
+  externalURL: "http://prometheus.example.com",
+  value: 95.5
+}, null, 2);
+
 function App() {
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
-  const [template, setTemplate] = useState(localStorage.getItem('template') || '{{ .CommonLabels.alertname }}');
-  const [data, setData] = useState(localStorage.getItem('alertData') || JSON.stringify({
-    receiver: "webhook",
-    status: "firing",
-    alerts: [
-      {
-        status: "firing",
-        labels: { alertname: "HighCPU", severity: "critical" },
-        annotations: { summary: "CPU is high" },
-        startsAt: "2023-01-01T00:00:00Z"
-      }
-    ],
-    commonLabels: { alertname: "HighCPU" },
-    commonAnnotations: { summary: "CPU is high" },
-    groupLabels: { alertname: "HighCPU" },
-    externalURL: "http://prometheus.example.com"
-  }, null, 2));
+  const [mode, setMode] = useState(localStorage.getItem('activeMode') || 'alertmanager');
   
+  const [amTemplate, setAmTemplate] = useState(localStorage.getItem('amTemplate') || '{{ .CommonLabels.alertname }}');
+  const [amData, setAmData] = useState(localStorage.getItem('amData') || DEFAULT_AM_DATA);
+  
+  const [promTemplate, setPromTemplate] = useState(localStorage.getItem('promTemplate') || 'Alert {{ .Labels.alertname }} value is {{ .Value | humanize }}');
+  const [promData, setPromData] = useState(localStorage.getItem('promData') || DEFAULT_PROM_DATA);
+  
+  const currentTemplate = mode === 'alertmanager' ? amTemplate : promTemplate;
+  const currentData = mode === 'alertmanager' ? amData : promData;
+
   const [result, setResult] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -38,7 +56,6 @@ function App() {
   // Parse template error to get location
   const templateError = useMemo(() => {
     if (!error) return null;
-    // Go template errors look like: template: :1:12: ...
     const match = error.match(/template: :(\d+):(\d+):/);
     if (match) {
       return {
@@ -56,43 +73,49 @@ function App() {
     localStorage.setItem('theme', theme);
   }, [theme]);
 
-  // Save template and data to localStorage
+  // Save mode, template and data to localStorage
   useEffect(() => {
-    localStorage.setItem('template', template);
-  }, [template]);
+    localStorage.setItem('activeMode', mode);
+  }, [mode]);
 
   useEffect(() => {
-    localStorage.setItem('alertData', data);
-  }, [data]);
+    localStorage.setItem('amTemplate', amTemplate);
+    localStorage.setItem('amData', amData);
+  }, [amTemplate, amData]);
+
+  useEffect(() => {
+    localStorage.setItem('promTemplate', promTemplate);
+    localStorage.setItem('promData', promData);
+  }, [promTemplate, promData]);
 
   // YAML/JSON Validation
   useEffect(() => {
     try {
-      if (data.trim() === '') {
+      if (currentData.trim() === '') {
         setDataError('Data cannot be empty');
         return;
       }
-      jsYaml.load(data);
+      jsYaml.load(currentData);
       setDataError(null);
     } catch (err) {
       setDataError(err.message);
     }
-  }, [data]);
+  }, [currentData]);
 
-  const alertData = useMemo(() => {
+  const parsedData = useMemo(() => {
     try {
-      return jsYaml.load(data);
+      return jsYaml.load(currentData);
     } catch (e) {
       return null;
     }
-  }, [data]);
+  }, [currentData]);
 
   const templateExtensions = useMemo(() => {
     return [
       StreamLanguage.define(go),
-      autocompletion({ override: [createTemplateCompletionSource(alertData)] })
+      autocompletion({ override: [createTemplateCompletionSource(parsedData, mode)] })
     ];
-  }, [alertData]);
+  }, [parsedData, mode]);
 
   const toggleTheme = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
@@ -100,7 +123,7 @@ function App() {
 
   const handleRender = useCallback(async () => {
     if (dataError) {
-      setError('Cannot render: Invalid YAML/JSON in Alert Data');
+      setError('Cannot render: Invalid YAML/JSON in Data field');
       return;
     }
 
@@ -112,7 +135,7 @@ function App() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ template, data }),
+        body: JSON.stringify({ template: currentTemplate, data: currentData, mode }),
       });
 
       const jsonResponse = await response.json();
@@ -126,7 +149,7 @@ function App() {
     } finally {
       setLoading(false);
     }
-  }, [template, data, dataError]);
+  }, [currentTemplate, currentData, mode, dataError]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -137,12 +160,30 @@ function App() {
 
   const cmTheme = theme === 'dark' ? vscodeDark : vscodeLight;
 
+  const handleTemplateChange = (val) => {
+    if (mode === 'alertmanager') setAmTemplate(val);
+    else setPromTemplate(val);
+  };
+
+  const handleDataChange = (val) => {
+    if (mode === 'alertmanager') setAmData(val);
+    else setPromData(val);
+  };
+
   return (
     <div className="vh-100 d-flex flex-column">
       <header className="header">
         <div className="container-fluid d-flex align-items-center justify-content-between">
           <div className="d-flex align-items-center">
-            <h6 className="mb-0 header-title me-4">Alertmanager Template Preview</h6>
+            <h6 className="mb-0 header-title me-4">Template Preview</h6>
+            <Nav variant="underline" activeKey={mode} onSelect={(k) => setMode(k)}>
+              <Nav.Item>
+                <Nav.Link eventKey="alertmanager" className="py-1">Alertmanager</Nav.Link>
+              </Nav.Item>
+              <Nav.Item>
+                <Nav.Link eventKey="prometheus" className="py-1">Prometheus</Nav.Link>
+              </Nav.Item>
+            </Nav>
           </div>
           <button className="theme-toggle" onClick={toggleTheme} title="Toggle Dark/Light Mode">
             {theme === 'light' ? <MoonStarsFill size={18} /> : <SunFill size={18} />}
@@ -165,11 +206,11 @@ function App() {
               </div>
               <div className="editor-container">
                 <CodeMirror
-                  value={template}
+                  value={currentTemplate}
                   height="100%"
                   theme={cmTheme}
                   extensions={templateExtensions}
-                  onChange={(value) => setTemplate(value)}
+                  onChange={handleTemplateChange}
                   basicSetup={{
                     lineNumbers: true,
                     foldGutter: true,
@@ -182,7 +223,7 @@ function App() {
           <div className="bottom-pane">
             <div className="editor-pane border-top-0">
               <div className="editor-label">
-                <span>Alert Data (YAML/JSON)</span>
+                <span>{mode === 'alertmanager' ? 'Alert Data (YAML/JSON)' : 'Rule Data (YAML/JSON)'}</span>
                 {dataError && (
                   <span className="badge-error" title={dataError}>
                     <ExclamationTriangleFill className="me-1" />
@@ -192,11 +233,11 @@ function App() {
               </div>
               <div className="editor-container">
                 <CodeMirror
-                  value={data}
+                  value={currentData}
                   height="100%"
                   theme={cmTheme}
                   extensions={[yaml()]}
-                  onChange={(value) => setData(value)}
+                  onChange={handleDataChange}
                   basicSetup={{
                     lineNumbers: true,
                     foldGutter: true,

@@ -10,6 +10,7 @@ import (
 type RenderRequest struct {
 	Template string `json:"template" binding:"required"`
 	Data     string `json:"data" binding:"required"`
+	Mode     string `json:"mode"` // "alertmanager" (default) or "prometheus"
 }
 
 // RenderHandler handles the template rendering request.
@@ -20,7 +21,12 @@ func RenderHandler(c *gin.Context) {
 		return
 	}
 
-	result, err := template.Render(req.Template, req.Data)
+	mode := req.Mode
+	if mode == "" {
+		mode = "alertmanager"
+	}
+
+	result, err := template.Render(req.Template, req.Data, mode)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
