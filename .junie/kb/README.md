@@ -105,8 +105,8 @@ This is a structured Knowledge Base for the Alertmanager Template Preview projec
         2. Create an empty `.keep` file in `assets/ui/dist/` and add an exception for it in `.gitignore` (`!assets/ui/dist/.keep`). This ensures the directory exists for `go:embed` even if the UI hasn't been built.
 - **Prometheus Query Mocking (Deprecated)**:
     - **Issue**: Initial attempt to implement `query` with manual mocks proved inflexible.
-    - **Action**: Rolled back mock implementation.
-    - **Next Step**: Implement real integration with Prometheus API via backend proxy or snapshot data.
+    - **Action**: Rolled back mock implementation in favor of a real backend proxy.
+    - **Current State**: Real integration with Prometheus API implemented via backend proxy (`--prometheus-url` flag).
 
 ### Planned Features & Architecture Ideas
 - **Prometheus Real Integration**:
