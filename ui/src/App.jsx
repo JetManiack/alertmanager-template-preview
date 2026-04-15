@@ -107,6 +107,8 @@ function App() {
   // Save mode, template and data to localStorage
   useEffect(() => {
     localStorage.setItem('activeMode', mode);
+    const title = mode === 'alertmanager' ? 'Alertmanager Template Preview' : 'Prometheus Template Preview';
+    document.title = title;
   }, [mode]);
 
   useEffect(() => {
