@@ -8,9 +8,9 @@ import (
 )
 
 // Render parses the template and renders it using the provided YAML/JSON data, based on the mode.
-func Render(tmplStr string, dataStr string, mode string) (string, error) {
+func Render(tmplStr string, dataStr string, mode string, prometheusURL string) (string, error) {
 	if mode == "prometheus" {
-		return RenderPrometheus(tmplStr, dataStr)
+		return RenderPrometheus(tmplStr, dataStr, prometheusURL)
 	}
 
 	var data template.Data

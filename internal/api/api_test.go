@@ -13,7 +13,9 @@ import (
 func TestRenderHandler(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
-	router.POST("/api/render", RenderHandler)
+	router.POST("/api/render", func(c *gin.Context) {
+		RenderHandler(c, "")
+	})
 
 	tests := []struct {
 		name       string

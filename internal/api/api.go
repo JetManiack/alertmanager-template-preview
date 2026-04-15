@@ -14,7 +14,7 @@ type RenderRequest struct {
 }
 
 // RenderHandler handles the template rendering request.
-func RenderHandler(c *gin.Context) {
+func RenderHandler(c *gin.Context, prometheusURL string) {
 	var req RenderRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -26,7 +26,7 @@ func RenderHandler(c *gin.Context) {
 		mode = "alertmanager"
 	}
 
-	result, err := template.Render(req.Template, req.Data, mode)
+	result, err := template.Render(req.Template, req.Data, mode, prometheusURL)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -36,10 +36,12 @@ func RenderHandler(c *gin.Context) {
 }
 
 // SetupRouter initializes the Gin engine with all routes.
-func SetupRouter() *gin.Engine {
+func SetupRouter(prometheusURL string) *gin.Engine {
 	r := gin.Default()
 
-	r.POST("/api/render", RenderHandler)
+	r.POST("/api/render", func(c *gin.Context) {
+		RenderHandler(c, prometheusURL)
+	})
 
 	SetupUI(r)
 

@@ -51,9 +51,8 @@ This is a structured Knowledge Base for the Alertmanager Template Preview projec
 
 ### Planned Features & Architecture Ideas
 - **Prometheus Real Integration**:
-    - **Option 1 (Backend Proxy)**: Add `--prometheus-url` CLI flag. Proxy `query` calls from templates to the real server.
-    - **Option 2 (Direct Browser Access)**: Input Prometheus URL in UI. Frontend fetches data directly (requires CORS on Prometheus).
-    - **Option 3 (Smart Snapshots)**: Allow pasting raw JSON output from Prometheus API `/api/v1/query` into the "Alert Data" field.
+    - **Backend Proxy (Implemented)**: Added `--prometheus-url` (or `-p`) CLI flag. Template functions `query`, `first`, `last`, `value`, and `label` now make real HTTP calls to the Prometheus API.
+    - **Caching**: Currently, requests are not cached. Each `query` call in a template triggers a new HTTP request.
 
 ### Successful Patterns
 -   (No entries yet)
