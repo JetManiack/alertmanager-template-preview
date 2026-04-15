@@ -19,7 +19,7 @@
 ## Phase 3: Advanced Features & UX
 - [x] Add syntax highlighting for templates and JSON/YAML (CodeMirror 6).
 - [x] Implement real-time rendering with debounce.
-- [ ] Add "Shareable Links" (URL encoding with compression).
+- [x] Add "Shareable Links" (URL encoding with compression).
 - [x] Context-aware autocompletion for templates.
 - [x] Support for both Alertmanager and Prometheus modes.
 
