@@ -5,77 +5,82 @@ const alertmanagerFuncs = [
 ].map(name => ({ label: name, type: "function" }));
 
 const alertmanagerFields = [
-  ".Receiver", ".Status", ".Alerts", ".NotificationReason", 
-  ".GroupLabels", ".CommonLabels", ".CommonAnnotations", ".ExternalURL"
+  "Receiver", "Status", "Alerts", "NotificationReason", 
+  "GroupLabels", "CommonLabels", "CommonAnnotations", "ExternalURL"
 ].map(name => ({ label: name, type: "variable" }));
 
 const alertFields = [
-  ".Status", ".Labels", ".Annotations", ".StartsAt", ".EndsAt", 
-  ".GeneratorURL", ".Fingerprint"
+  "Status", "Labels", "Annotations", "StartsAt", "EndsAt", 
+  "GeneratorURL", "Fingerprint"
 ].map(name => ({ label: name, type: "variable" }));
 
 const alertsMethods = [
-  ".Firing", ".Resolved"
+  "Firing", "Resolved"
 ].map(name => ({ label: name, type: "method" }));
 
 const kvMethods = [
-  ".SortedPairs", ".Names", ".Values"
+  "SortedPairs", "Names", "Values"
 ].map(name => ({ label: name, type: "method" }));
 
 export function createTemplateCompletionSource(alertData) {
   return (context) => {
-    // Match the current word, including a leading dot if present
-    const word = context.matchBefore(/\.?\w*/);
+    // Match a word before the cursor
+    let word = context.matchBefore(/\w*/);
     
     if (!word || (word.from === word.to && !context.explicit)) {
-      return null;
+      // Check if we just typed a dot
+      const isJustDot = context.state.sliceDoc(context.pos - 1, context.pos) === ".";
+      if (!isJustDot && !context.explicit) return null;
+      
+      if (isJustDot) {
+        word = { from: context.pos, to: context.pos, text: "" };
+      }
     }
 
-    let options = [];
-
-    // If we have a dot at the start, suggest fields
-    if (word.text.startsWith(".")) {
-      options = [...alertmanagerFields];
+    // Check if there is a dot before the word
+    const isDot = word.from > 0 && context.state.sliceDoc(word.from - 1, word.from) === ".";
+    
+    if (isDot) {
+      // Possible nested path: .Field.SubField
+      const beforeDot = context.state.sliceDoc(0, word.from - 1);
+      const parentMatch = beforeDot.match(/\.(\w+)$/);
       
-      // Try to suggest nested keys if we can parse the path
-      // This is a simple implementation: if we match something like .CommonLabels.
-      const fullPathMatch = context.matchBefore(/\.[a-zA-Z]+\.[a-zA-Z]*/);
-      if (fullPathMatch) {
-        const parts = fullPathMatch.text.split("."); // ["", "CommonLabels", ""]
-        if (parts.length === 3) {
-          const field = parts[1];
-          let source = null;
-          if (field === "CommonLabels" && alertData?.commonLabels) source = alertData.commonLabels;
-          else if (field === "GroupLabels" && alertData?.groupLabels) source = alertData.groupLabels;
-          else if (field === "CommonAnnotations" && alertData?.commonAnnotations) source = alertData.commonAnnotations;
-          
-          if (source) {
-            const keys = Object.keys(source).map(key => ({
-              label: key,
-              type: "property",
-              // We don't include a dot because it's already there or we are continuing it
-            }));
-            
-            return {
-              from: fullPathMatch.from + field.length + 2, // skip .Field.
-              options: keys
-            };
-          }
+      if (parentMatch) {
+        const field = parentMatch[1];
+        let source = null;
+        if (field === "CommonLabels" && alertData?.commonLabels) source = alertData.commonLabels;
+        else if (field === "GroupLabels" && alertData?.groupLabels) source = alertData.groupLabels;
+        else if (field === "CommonAnnotations" && alertData?.commonAnnotations) source = alertData.commonAnnotations;
+        
+        if (source) {
+          const keys = Object.keys(source).map(key => ({
+            label: key,
+            type: "property",
+          }));
+          return {
+            from: word.from,
+            to: context.pos,
+            options: keys,
+            validFor: /^\w*$/
+          };
         }
       }
 
-      // Also suggest Alert fields and methods if inside a loop? 
-      // Hard to know context without a real parser, but let's just add them to the list
-      // for now to be helpful, or maybe when user types . after .Alerts
-      options = [...options, ...alertFields, ...alertsMethods, ...kvMethods];
-    } else {
-      // Suggest functions
-      options = [...alertmanagerFuncs];
+      // Default top-level fields
+      return {
+        from: word.from,
+        to: context.pos,
+        options: [...alertmanagerFields, ...alertFields, ...alertsMethods, ...kvMethods],
+        validFor: /^\w*$/
+      };
     }
 
+    // No dot -> Suggest functions
     return {
       from: word.from,
-      options: options.filter(o => o.label.startsWith(word.text))
+      to: context.pos,
+      options: alertmanagerFuncs,
+      validFor: /^\w*$/
     };
   };
 }
