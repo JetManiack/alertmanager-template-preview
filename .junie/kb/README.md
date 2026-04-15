@@ -67,6 +67,13 @@ This is a structured Knowledge Base for the Alertmanager Template Preview projec
         - **Docker**: Builds a multi-stage Docker image on every push and PR.
         - **GHCR**: Pushes the built image to **GitHub Container Registry (GHCR)** only on pushes to `main` and version tags (`v*`).
         - **Metadata**: Uses `docker/metadata-action` for automatic tagging.
+    - **Private GHCR in K8s**: To pull private images from GHCR into a Kubernetes cluster:
+        1. Create a GitHub Personal Access Token (PAT) with `read:packages` scope.
+        2. Create a Kubernetes Secret of type `docker-registry`:
+           ```bash
+           kubectl create secret docker-registry ghcr-auth --docker-server=ghcr.io --docker-username=<user> --docker-password=<token>
+           ```
+        3. Reference this secret in the `imagePullSecrets` field of the Deployment/Pod manifest.
 
 ### Known Issues & Solutions
 - **404 on Assets in Production**:
