@@ -67,6 +67,9 @@ This is a structured Knowledge Base for the Alertmanager Template Preview projec
         - **Docker**: Builds a multi-stage Docker image on every push and PR.
         - **GHCR**: Pushes the built image to **GitHub Container Registry (GHCR)** only on pushes to `main` and version tags (`v*`).
         - **Metadata**: Uses `docker/metadata-action` for automatic tagging.
+    - **CI/CD Node.js 24 Migration**: In April 2026, the CI/CD pipeline was updated to use Node.js 24 for the Actions runtime, as Node.js 20 reached its end-of-life.
+        - **Updated Actions**: `actions/checkout@v6`, `actions/setup-go@v6`, and `actions/setup-node@v6` were adopted to ensure compatibility with the new runtime.
+        - **Forced Runtime**: The `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true` environment variable was added to the workflow to proactively opt into the new default ahead of GitHub's mandatory switch in June 2026.
     - **Private GHCR in K8s**: To pull private images from GHCR into a Kubernetes cluster:
         1. Create a GitHub Personal Access Token (PAT) with `read:packages` scope.
         2. Create a Kubernetes Secret of type `docker-registry`:
