@@ -29,7 +29,12 @@ This is a structured Knowledge Base for the Alertmanager Template Preview projec
     - **Multi-Mode Support**: The application now supports two separate modes: **Alertmanager** and **Prometheus**.
         - **Alertmanager Mode**: Uses `prometheus/alertmanager/template` for rendering. Context includes `.CommonLabels`, `.Alerts`, etc.
         - **Prometheus Mode**: Uses a custom renderer to mimic Prometheus alerting/recording rule templates. Context includes `.Labels`, `.Value`, `.ExternalURL`, etc.
-        - **Functions**: Prometheus mode supports specific functions like `humanize`, `humanize1024`, `humanizePercentage`, `humanizeDuration`, and `humanizeTimestamp`.
+        - **Functions**: Prometheus mode supports specific functions like `humanize`, `humanize1024`, `humanizePercentage`, `humanizeDuration`, `humanizeTimestamp`, `round`, `toJson`, `toJS`, and `toTime`.
+        - **Shared Utility Functions**: Added a set of common utility functions to both Alertmanager and Prometheus modes for consistency:
+            - `round`: Rounds a floating-point value to the nearest integer.
+            - `humanize`, `humanize1024`, `humanizePercentage`, `humanizeTimestamp`: Formatting functions (reused from Prometheus common helpers).
+            - `toJson`, `toJS`: Converts objects to JSON/JavaScript string representations.
+            - `toTime`: Converts Prometheus floating-point timestamps (seconds) to Go `time.Time` objects.
         - **Tabs**: A tab switcher in the header allows users to switch between modes. Each mode's template and data are persisted independently in `localStorage`.
     - **YAML Support**: The backend uses `github.com/goccy/go-yaml` for unmarshaling alert data. This library is used because it correctly respects `json` struct tags (which are present in `prometheus/alertmanager/template.Data`), allowing both YAML and JSON input to be parsed into the same Go structures.
 - **Automatic Rendering**: Debounced (500ms) automatic rendering on every change in Template or Alert Data fields. Manual "Run" button was removed to provide a more seamless experience.

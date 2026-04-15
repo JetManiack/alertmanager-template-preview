@@ -2,9 +2,12 @@ package template
 
 import (
 	"fmt"
+	tmplhtml "html/template"
+	tmpltext "text/template"
 
 	"github.com/goccy/go-yaml"
 	"github.com/prometheus/alertmanager/template"
+	commonTemplates "github.com/prometheus/common/helpers/templates"
 )
 
 // Render parses the template and renders it using the provided YAML/JSON data, based on the mode.
@@ -19,7 +22,18 @@ func Render(tmplStr string, dataStr string, mode string, prometheusURL string) (
 	}
 
 	// FromGlobs(nil) initializes a template with default functions and built-in templates.
-	tmpl, err := template.FromGlobs(nil)
+	tmpl, err := template.FromGlobs(nil, func(text *tmpltext.Template, html *tmplhtml.Template) {
+		text.Funcs(tmpltext.FuncMap{
+			"round":              round,
+			"toTime":             toTime,
+			"toJson":             toJson,
+			"toJS":               toJson,
+			"humanize":           humanize,
+			"humanize1024":       humanize1024,
+			"humanizeTimestamp":  commonTemplates.HumanizeTimestamp,
+			"humanizePercentage": humanizePercentage,
+		})
+	})
 	if err != nil {
 		return "", fmt.Errorf("failed to initialize templates: %w", err)
 	}

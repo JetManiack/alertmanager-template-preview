@@ -44,17 +44,11 @@ func RenderPrometheus(tmplStr string, dataStr string, prometheusURL string) (str
 			re := regexp.MustCompile(pattern)
 			return re.ReplaceAllString(text, repl)
 		},
-		"humanize":          humanize,
-		"humanize1024":      humanize1024,
-		"humanizeDuration":  templates.HumanizeDuration,
-		"humanizeTimestamp": templates.HumanizeTimestamp,
-		"humanizePercentage": func(v any) (string, error) {
-			f, err := templates.ConvertToFloat(v)
-			if err != nil {
-				return "", err
-			}
-			return fmt.Sprintf("%.4g%%", f*100), nil
-		},
+		"humanize":           humanize,
+		"humanize1024":       humanize1024,
+		"humanizeDuration":   templates.HumanizeDuration,
+		"humanizeTimestamp":  templates.HumanizeTimestamp,
+		"humanizePercentage": humanizePercentage,
 		"query": func(q string) (any, error) {
 			if prometheusURL == "" {
 				return nil, fmt.Errorf("function 'query' requires a live Prometheus server (use --prometheus-url flag)")
@@ -101,12 +95,14 @@ func RenderPrometheus(tmplStr string, dataStr string, prometheusURL string) (str
 				return nil, fmt.Errorf("label: expected sample, got %T", v)
 			}
 		},
-		"toTime": func(v any) (time.Time, error) {
-			f, err := templates.ConvertToFloat(v)
-			if err != nil {
-				return time.Time{}, err
-			}
-			return time.Unix(0, int64(math.Round(f*1000))*1e6).UTC(), nil
+		"round":  round,
+		"toJS":   toJson,
+		"toJson": toJson,
+		"toTime": toTime,
+		"safeHtml": func(s string) any {
+			// This is just a placeholder since we are not using html/template.
+			// In text/template it's basically a no-op that returns the string.
+			return s
 		},
 	}
 
@@ -217,6 +213,38 @@ func queryPrometheus(baseURL, q string) ([]QueryResultSample, error) {
 	}
 
 	return samples, nil
+}
+
+func round(v any) (float64, error) {
+	f, err := templates.ConvertToFloat(v)
+	if err != nil {
+		return 0, err
+	}
+	return math.Round(f), nil
+}
+
+func toTime(v any) (time.Time, error) {
+	f, err := templates.ConvertToFloat(v)
+	if err != nil {
+		return time.Time{}, err
+	}
+	return time.Unix(0, int64(math.Round(f*1000))*1e6).UTC(), nil
+}
+
+func toJson(v any) (string, error) {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return "", err
+	}
+	return string(b), nil
+}
+
+func humanizePercentage(v any) (string, error) {
+	f, err := templates.ConvertToFloat(v)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%.4g%%", f*100), nil
 }
 
 func humanize(v any) (string, error) {

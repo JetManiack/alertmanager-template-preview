@@ -1,13 +1,14 @@
 const alertmanagerFuncs = [
   "toUpper", "toLower", "title", "trimSpace", "join", "match", "safeHtml", 
   "safeUrl", "urlUnescape", "reReplaceAll", "stringSlice", "date", "tz", 
-  "since", "humanizeDuration", "toJson", "list", "append", "dict"
+  "since", "humanizeDuration", "humanize", "humanize1024", "humanizeTimestamp", "humanizePercentage",
+  "toJson", "toJS", "toTime", "list", "append", "dict", "round"
 ].map(name => ({ label: name, type: "function" }));
 
 const prometheusFuncs = [
   "toUpper", "toLower", "title", "trimSpace", "join", "match", "reReplaceAll",
   "humanize", "humanize1024", "humanizeDuration", "humanizeTimestamp", "humanizePercentage",
-  "query", "first", "last", "value", "toTime"
+  "query", "first", "last", "value", "label", "toTime", "toJson", "toJS", "safeHtml", "round"
 ].map(name => ({ label: name, type: "function" }));
 
 const alertmanagerFields = [
