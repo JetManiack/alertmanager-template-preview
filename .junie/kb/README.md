@@ -59,4 +59,7 @@ This is a structured Knowledge Base for the Alertmanager Template Preview projec
     - **Caching**: Currently, requests are not cached. Each `query` call in a template triggers a new HTTP request.
 
 ### Successful Patterns
--   (No entries yet)
+- **Real-world Verification**: Manually verified the Prometheus integration against a live Prometheus server (`localhost:9090`).
+    - **`query` function**: Correctly fetches vector results (e.g., `up`) and renders them in templates.
+    - **`time()` function**: Correctly handles scalar results from Prometheus, which previously caused unmarshaling errors.
+    - **Latency**: End-to-end rendering with real queries is fast enough for the debounced automatic updates.
