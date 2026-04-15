@@ -22,28 +22,34 @@ const kvMethods = [
   "SortedPairs", "Names", "Values"
 ].map(name => ({ label: name, type: "method" }));
 
+// All possible variable completions (without leading dot)
+const allFieldCompletions = [...alertmanagerFields, ...alertFields, ...alertsMethods, ...kvMethods];
+
+// All possible variable completions with a leading dot for "no-dot" contexts
+const allDottedCompletions = allFieldCompletions.map(c => ({
+  ...c,
+  label: "." + c.label,
+  // We want to filter by the name without the dot if they haven't typed the dot yet
+  filterText: c.label 
+}));
+
 export function createTemplateCompletionSource(alertData) {
   return (context) => {
-    // Match a word before the cursor
-    let word = context.matchBefore(/\w*/);
+    // Match a word before the cursor (including a dot)
+    let word = context.matchBefore(/\.?\w*/);
     
     if (!word || (word.from === word.to && !context.explicit)) {
-      // Check if we just typed a dot
-      const isJustDot = context.state.sliceDoc(context.pos - 1, context.pos) === ".";
-      if (!isJustDot && !context.explicit) return null;
-      
-      if (isJustDot) {
-        word = { from: context.pos, to: context.pos, text: "" };
-      }
+      return null;
     }
 
-    // Check if there is a dot before the word
-    const isDot = word.from > 0 && context.state.sliceDoc(word.from - 1, word.from) === ".";
+    // Check if the word starts with a dot
+    const startsWithDot = word.text.startsWith(".");
     
-    if (isDot) {
+    if (startsWithDot) {
       // Possible nested path: .Field.SubField
-      const beforeDot = context.state.sliceDoc(0, word.from - 1);
-      const parentMatch = beforeDot.match(/\.(\w+)$/);
+      // We need to check what is BEFORE the current word (which starts with a dot)
+      const beforeWord = context.state.sliceDoc(0, word.from);
+      const parentMatch = beforeWord.match(/\.(\w+)$/);
       
       if (parentMatch) {
         const field = parentMatch[1];
@@ -58,7 +64,7 @@ export function createTemplateCompletionSource(alertData) {
             type: "property",
           }));
           return {
-            from: word.from,
+            from: word.from + 1, // Skip the dot
             to: context.pos,
             options: keys,
             validFor: /^\w*$/
@@ -66,20 +72,20 @@ export function createTemplateCompletionSource(alertData) {
         }
       }
 
-      // Default top-level fields
+      // Default fields after a dot
       return {
-        from: word.from,
+        from: word.from + 1, // Skip the dot
         to: context.pos,
-        options: [...alertmanagerFields, ...alertFields, ...alertsMethods, ...kvMethods],
+        options: allFieldCompletions,
         validFor: /^\w*$/
       };
     }
 
-    // No dot -> Suggest functions
+    // No dot -> Suggest functions AND top-level fields (starting with dot)
     return {
       from: word.from,
       to: context.pos,
-      options: alertmanagerFuncs,
+      options: [...alertmanagerFuncs, ...allDottedCompletions],
       validFor: /^\w*$/
     };
   };
