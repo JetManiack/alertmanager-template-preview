@@ -44,6 +44,16 @@ This is a structured Knowledge Base for the Alertmanager Template Preview projec
     - **Symptom**: UI loads but assets (`/assets/index-...`) return 404.
     - **Cause**: Assets are linked relative to the root, but the server is set up to serve them under `/ui`.
     - **Fix**: Add `base: '/ui/'` to `ui/vite.config.js` and rebuild.
+- **Prometheus Query Mocking (Deprecated)**:
+    - **Issue**: Initial attempt to implement `query` with manual mocks proved inflexible.
+    - **Action**: Rolled back mock implementation.
+    - **Next Step**: Implement real integration with Prometheus API via backend proxy or snapshot data.
+
+### Planned Features & Architecture Ideas
+- **Prometheus Real Integration**:
+    - **Option 1 (Backend Proxy)**: Add `--prometheus-url` CLI flag. Proxy `query` calls from templates to the real server.
+    - **Option 2 (Direct Browser Access)**: Input Prometheus URL in UI. Frontend fetches data directly (requires CORS on Prometheus).
+    - **Option 3 (Smart Snapshots)**: Allow pasting raw JSON output from Prometheus API `/api/v1/query` into the "Alert Data" field.
 
 ### Successful Patterns
 -   (No entries yet)
