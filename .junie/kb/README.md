@@ -82,6 +82,16 @@ This is a structured Knowledge Base for the Alertmanager Template Preview projec
            ```
         3. Reference this secret in the `imagePullSecrets` field of the Deployment/Pod manifest.
 
+- **Graceful Shutdown and Healthchecks**:
+    - **Implementation**: Replaced `router.Run` with a manual `http.Server` in `cmd/server/main.go`. Added a `signal.Notify` listener for `SIGINT` and `SIGTERM`.
+    - **Timeout**: The server has 5 seconds to gracefully finish pending requests before forced shutdown.
+    - **Healthchecks**: Added a `/healthz` endpoint in `internal/api/api.go` for Kubernetes liveness/readiness probes.
+    - **Metrics**: Added a `/metrics` endpoint using `prometheus/client_golang/promhttp` to expose standard Go and process metrics.
+- **Application Versioning**:
+    - **CLI**: Added `Version` field to the `urfave/cli/v3` command.
+    - **Build**: Updated `Makefile` to inject the current Git tag or commit hash into `main.Version` using `-ldflags`.
+    - **User feedback**: The version is displayed in the startup logs and via the `--version` flag.
+
 ### Known Issues & Solutions
 - **404 on Assets in Production**:
     - **Symptom**: UI loads but assets (`/assets/index-...`) return 404.

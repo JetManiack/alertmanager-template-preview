@@ -5,6 +5,7 @@ import (
 
 	"github.com/JetManiack/alertmanager-template-preview/internal/template"
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type RenderRequest struct {
@@ -38,6 +39,12 @@ func RenderHandler(c *gin.Context, prometheusURL string) {
 // SetupRouter initializes the Gin engine with all routes.
 func SetupRouter(prometheusURL string) *gin.Engine {
 	r := gin.Default()
+
+	r.GET("/healthz", func(c *gin.Context) {
+		c.Status(http.StatusOK)
+	})
+
+	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	r.POST("/api/render", func(c *gin.Context) {
 		RenderHandler(c, prometheusURL)

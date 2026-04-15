@@ -28,3 +28,6 @@
 - [x] Add Dockerfile for easy deployment.
 - [x] GitHub Actions for CI/CD and Docker publishing.
 - [x] Documentation for usage and deployment.
+- [x] Implement Graceful Shutdown.
+- [x] Add `/healthz` and `/metrics` endpoints.
+- [x] Application versioning.
