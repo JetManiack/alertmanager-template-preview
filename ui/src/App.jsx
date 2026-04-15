@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Nav } from 'react-bootstrap';
+import { Group, Panel, Separator, useDefaultLayout } from 'react-resizable-panels';
 import CodeMirror from '@uiw/react-codemirror';
 import { autocompletion } from '@codemirror/autocomplete';
 import { yaml } from '@codemirror/lang-yaml';
@@ -170,6 +171,9 @@ function App() {
     else setPromData(val);
   };
 
+  const { defaultLayout: horizontalLayout, onLayoutChanged: onHorizontalLayoutChanged } = useDefaultLayout({ id: "horizontal-layout" });
+  const { defaultLayout: verticalLayout, onLayoutChanged: onVerticalLayoutChanged } = useDefaultLayout({ id: "vertical-layout" });
+
   return (
     <div className="vh-100 d-flex flex-column">
       <header className="header">
@@ -192,82 +196,88 @@ function App() {
       </header>
 
       <main className="main-container">
-        <div className="left-panel">
-          <div className="top-pane">
-            <div className="editor-pane">
+        <Group orientation="horizontal" defaultLayout={horizontalLayout} onLayoutChanged={onHorizontalLayoutChanged}>
+          <Panel defaultSize={50} minSize={20}>
+            <Group orientation="vertical" defaultLayout={verticalLayout} onLayoutChanged={onVerticalLayoutChanged}>
+              <Panel defaultSize={50} minSize={20}>
+                <div className="editor-pane h-100">
+                  <div className="editor-label">
+                    <span>Template</span>
+                    {templateError && (
+                      <span className="badge-error" title={templateError.message}>
+                        <ExclamationTriangleFill className="me-1" />
+                        Syntax Error: Line {templateError.line}
+                      </span>
+                    )}
+                  </div>
+                  <div className="editor-container">
+                    <CodeMirror
+                      value={currentTemplate}
+                      height="100%"
+                      theme={cmTheme}
+                      extensions={templateExtensions}
+                      onChange={handleTemplateChange}
+                      basicSetup={{
+                        lineNumbers: true,
+                        foldGutter: true,
+                        highlightActiveLine: true,
+                      }}
+                    />
+                  </div>
+                </div>
+              </Panel>
+              <Separator className="resize-handle-vertical" />
+              <Panel defaultSize={50} minSize={20}>
+                <div className="editor-pane h-100">
+                  <div className="editor-label">
+                    <span>{mode === 'alertmanager' ? 'Alert Data (YAML/JSON)' : 'Rule Data (YAML/JSON)'}</span>
+                    {dataError && (
+                      <span className="badge-error" title={dataError}>
+                        <ExclamationTriangleFill className="me-1" />
+                        Invalid YAML/JSON
+                      </span>
+                    )}
+                  </div>
+                  <div className="editor-container">
+                    <CodeMirror
+                      value={currentData}
+                      height="100%"
+                      theme={cmTheme}
+                      extensions={[yaml()]}
+                      onChange={handleDataChange}
+                      basicSetup={{
+                        lineNumbers: true,
+                        foldGutter: true,
+                        highlightActiveLine: true,
+                      }}
+                    />
+                  </div>
+                </div>
+              </Panel>
+            </Group>
+          </Panel>
+          <Separator className="resize-handle-horizontal" />
+          <Panel defaultSize={50} minSize={20}>
+            <div className="editor-pane h-100">
               <div className="editor-label">
-                <span>Template</span>
-                {templateError && (
-                  <span className="badge-error" title={templateError.message}>
-                    <ExclamationTriangleFill className="me-1" />
-                    Syntax Error: Line {templateError.line}
-                  </span>
+                Result
+                {loading && <small className="text-success ms-2 italic">Rendering...</small>}
+              </div>
+              <div className="preview-content">
+                {error ? (
+                  <div className="alert alert-danger mb-0 rounded-0 border-0">
+                    <strong className="d-block mb-1">Rendering Error</strong>
+                    <pre className="mb-0 text-break" style={{whiteSpace: 'pre-wrap'}}>{error}</pre>
+                  </div>
+                ) : (
+                  <div className="preview-result">
+                    <pre className="mb-0">{result || '(empty output)'}</pre>
+                  </div>
                 )}
               </div>
-              <div className="editor-container">
-                <CodeMirror
-                  value={currentTemplate}
-                  height="100%"
-                  theme={cmTheme}
-                  extensions={templateExtensions}
-                  onChange={handleTemplateChange}
-                  basicSetup={{
-                    lineNumbers: true,
-                    foldGutter: true,
-                    highlightActiveLine: true,
-                  }}
-                />
-              </div>
             </div>
-          </div>
-          <div className="bottom-pane">
-            <div className="editor-pane border-top-0">
-              <div className="editor-label">
-                <span>{mode === 'alertmanager' ? 'Alert Data (YAML/JSON)' : 'Rule Data (YAML/JSON)'}</span>
-                {dataError && (
-                  <span className="badge-error" title={dataError}>
-                    <ExclamationTriangleFill className="me-1" />
-                    Invalid YAML/JSON
-                  </span>
-                )}
-              </div>
-              <div className="editor-container">
-                <CodeMirror
-                  value={currentData}
-                  height="100%"
-                  theme={cmTheme}
-                  extensions={[yaml()]}
-                  onChange={handleDataChange}
-                  basicSetup={{
-                    lineNumbers: true,
-                    foldGutter: true,
-                    highlightActiveLine: true,
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="right-panel">
-          <div className="editor-pane border-start-0">
-            <div className="editor-label">
-              Result
-              {loading && <small className="text-success ms-2 italic">Rendering...</small>}
-            </div>
-            <div className="preview-content">
-              {error ? (
-                <div className="alert alert-danger mb-0 rounded-0 border-0">
-                  <strong className="d-block mb-1">Rendering Error</strong>
-                  <pre className="mb-0 text-break" style={{whiteSpace: 'pre-wrap'}}>{error}</pre>
-                </div>
-              ) : (
-                <div className="preview-result">
-                  <pre className="mb-0">{result || '(empty output)'}</pre>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+          </Panel>
+        </Group>
       </main>
     </div>
   )
