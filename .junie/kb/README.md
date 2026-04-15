@@ -16,6 +16,7 @@ This is a structured Knowledge Base for the Alertmanager Template Preview projec
     - **YAML/JSON**: Uses `@codemirror/lang-yaml` for "Alert Data" field (YAML is a superset of JSON).
     - **Go Templates**: Uses `@codemirror/legacy-modes/mode/go` as a close approximation for highlighting.
 - **Theme Switching**: Implemented using Bootstrap 5's `data-bs-theme` attribute and CodeMirror's theme system (`@uiw/codemirror-theme-vscode`). Theme preference is persisted in `localStorage`.
+- **Persistence**: Editor contents (`template` and `alertData`) and UI theme are persisted in `localStorage` to preserve user progress between page refreshes.
 - **Error Highlighting**:
     - **YAML/JSON**: Real-time validation in the frontend using `js-yaml` with a visual indicator.
     - **Templates**: Parsing of Go template error strings (line:column) from the backend to show indicators in the UI.

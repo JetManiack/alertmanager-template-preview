@@ -10,8 +10,8 @@ import jsYaml from 'js-yaml';
 
 function App() {
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
-  const [template, setTemplate] = useState('{{ .CommonLabels.alertname }}');
-  const [data, setData] = useState(JSON.stringify({
+  const [template, setTemplate] = useState(localStorage.getItem('template') || '{{ .CommonLabels.alertname }}');
+  const [data, setData] = useState(localStorage.getItem('alertData') || JSON.stringify({
     receiver: "webhook",
     status: "firing",
     alerts: [
@@ -53,6 +53,15 @@ function App() {
     document.documentElement.setAttribute('data-bs-theme', theme);
     localStorage.setItem('theme', theme);
   }, [theme]);
+
+  // Save template and data to localStorage
+  useEffect(() => {
+    localStorage.setItem('template', template);
+  }, [template]);
+
+  useEffect(() => {
+    localStorage.setItem('alertData', data);
+  }, [data]);
 
   // YAML/JSON Validation
   useEffect(() => {
