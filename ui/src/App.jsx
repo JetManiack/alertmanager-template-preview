@@ -1,12 +1,14 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import CodeMirror from '@uiw/react-codemirror';
+import { autocompletion } from '@codemirror/autocomplete';
 import { yaml } from '@codemirror/lang-yaml';
 import { StreamLanguage } from '@codemirror/language';
 import { go } from '@codemirror/legacy-modes/mode/go';
 import { vscodeDark, vscodeLight } from '@uiw/codemirror-theme-vscode';
 import { SunFill, MoonStarsFill, ExclamationTriangleFill } from 'react-bootstrap-icons';
 import jsYaml from 'js-yaml';
+import { createTemplateCompletionSource } from './completions';
 
 function App() {
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
@@ -76,6 +78,21 @@ function App() {
       setDataError(err.message);
     }
   }, [data]);
+
+  const alertData = useMemo(() => {
+    try {
+      return jsYaml.load(data);
+    } catch (e) {
+      return null;
+    }
+  }, [data]);
+
+  const templateExtensions = useMemo(() => {
+    return [
+      StreamLanguage.define(go),
+      autocompletion({ override: [createTemplateCompletionSource(alertData)] })
+    ];
+  }, [alertData]);
 
   const toggleTheme = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
@@ -151,7 +168,7 @@ function App() {
                   value={template}
                   height="100%"
                   theme={cmTheme}
-                  extensions={[StreamLanguage.define(go)]}
+                  extensions={templateExtensions}
                   onChange={(value) => setTemplate(value)}
                   basicSetup={{
                     lineNumbers: true,
