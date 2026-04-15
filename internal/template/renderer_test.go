@@ -45,32 +45,6 @@ func TestRender(t *testing.T) {
 			expected: "Alert HighLoad is 99",
 			wantErr:  false,
 		},
-		{
-			name: "Prometheus: Mocked query",
-			tmpl: `{{ query "up" | first | value }}`,
-			data: `
-queries:
-  "up":
-    - metric: {instance: "localhost"}
-      value: 1
-`,
-			mode:     "prometheus",
-			expected: "1",
-			wantErr:  false,
-		},
-		{
-			name: "Prometheus: Mocked query with labels",
-			tmpl: `{{ with query "node_load" | first }}{{ . | label "instance" }}: {{ . | value }}{{ end }}`,
-			data: `
-queries:
-  "node_load":
-    - metric: {instance: "server-1"}
-      value: 0.5
-`,
-			mode:     "prometheus",
-			expected: "server-1: 0.5",
-			wantErr:  false,
-		},
 	}
 
 	for _, tt := range tests {

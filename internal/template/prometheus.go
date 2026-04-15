@@ -19,7 +19,6 @@ type PrometheusData struct {
 	ExternalLabels map[string]string `json:"externalLabels"`
 	ExternalURL    string            `json:"externalURL"`
 	Value          float64           `json:"value"`
-	Queries        map[string]any    `json:"queries"`
 }
 
 func RenderPrometheus(tmplStr string, dataStr string) (string, error) {
@@ -29,9 +28,9 @@ func RenderPrometheus(tmplStr string, dataStr string) (string, error) {
 	}
 
 	funcs := tmpltext.FuncMap{
-		"toUpper":   strings.ToUpper,
-		"toLower":   strings.ToLower,
-		"title":     strings.Title,
+		"toUpper": strings.ToUpper,
+		"toLower": strings.ToLower,
+		"title":   strings.Title,
 		"trimSpace": strings.TrimSpace,
 		"join": func(sep string, s []string) string {
 			return strings.Join(s, sep)
@@ -41,9 +40,9 @@ func RenderPrometheus(tmplStr string, dataStr string) (string, error) {
 			re := regexp.MustCompile(pattern)
 			return re.ReplaceAllString(text, repl)
 		},
-		"humanize":          humanize,
-		"humanize1024":      humanize1024,
-		"humanizeDuration":  templates.HumanizeDuration,
+		"humanize":         humanize,
+		"humanize1024":     humanize1024,
+		"humanizeDuration": templates.HumanizeDuration,
 		"humanizeTimestamp": templates.HumanizeTimestamp,
 		"humanizePercentage": func(v any) (string, error) {
 			f, err := templates.ConvertToFloat(v)
@@ -53,73 +52,16 @@ func RenderPrometheus(tmplStr string, dataStr string) (string, error) {
 			return fmt.Sprintf("%.4g%%", f*100), nil
 		},
 		"query": func(q string) (any, error) {
-			if res, ok := data.Queries[q]; ok {
-				return res, nil
-			}
-			// Fallback: return empty list instead of error to allow editing templates more smoothly
-			return []any{}, nil
+			return nil, fmt.Errorf("function 'query' is not supported in the previewer yet (requires a live Prometheus server)")
 		},
 		"first": func(v any) (any, error) {
-			switch iter := v.(type) {
-			case []any:
-				if len(iter) == 0 {
-					return nil, nil
-				}
-				return iter[0], nil
-			default:
-				return nil, fmt.Errorf("first: expected list, got %T", v)
-			}
+			return nil, fmt.Errorf("function 'first' is not supported in the previewer yet")
 		},
 		"last": func(v any) (any, error) {
-			switch iter := v.(type) {
-			case []any:
-				if l := len(iter); l > 0 {
-					return iter[l-1], nil
-				}
-				return nil, nil
-			default:
-				return nil, fmt.Errorf("last: expected list, got %T", v)
-			}
+			return nil, fmt.Errorf("function 'last' is not supported in the previewer yet")
 		},
 		"value": func(v any) (any, error) {
-			if v == nil {
-				return nil, nil
-			}
-			switch sample := v.(type) {
-			case map[string]any:
-				if val, ok := sample["value"]; ok {
-					return val, nil
-				}
-				// If it's a sample map but doesn't have "value", try ConvertToFloat on it directly (unlikely to work)
-				return templates.ConvertToFloat(v)
-			default:
-				return templates.ConvertToFloat(v)
-			}
-		},
-		"label": func(l string, v any) (string, error) {
-			if v == nil {
-				return "", nil
-			}
-			switch sample := v.(type) {
-			case map[string]any:
-				// Prometheus sample has "metric" which contains labels
-				if metric, ok := sample["metric"].(map[string]any); ok {
-					if val, ok := metric[l].(string); ok {
-						return val, nil
-					}
-				}
-				// Also support flattened labels for convenience
-				if labels, ok := sample["labels"].(map[string]any); ok {
-					if val, ok := labels[l].(string); ok {
-						return val, nil
-					}
-				}
-				// Check top-level if it's just a map of labels
-				if val, ok := sample[l].(string); ok {
-					return val, nil
-				}
-			}
-			return "", nil
+			return nil, fmt.Errorf("function 'value' is not supported in the previewer yet")
 		},
 	}
 
