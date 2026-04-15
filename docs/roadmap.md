@@ -17,12 +17,14 @@
 - [x] Embedded UI into Go binary.
 
 ## Phase 3: Advanced Features & UX
-- [ ] Add syntax highlighting for templates and JSON (CodeMirror/Monaco).
-- [ ] Implement real-time rendering.
-- [ ] Add "Shareable Links" (saving state to backend or URL encoding).
-- [ ] Pre-load common Alertmanager objects (labels, annotations).
+- [x] Add syntax highlighting for templates and JSON/YAML (CodeMirror 6).
+- [x] Implement real-time rendering with debounce.
+- [ ] Add "Shareable Links" (URL encoding with compression).
+- [x] Context-aware autocompletion for templates.
+- [x] Support for both Alertmanager and Prometheus modes.
 
 ## Phase 4: Production Readiness
-- [ ] Embed frontend build into the Go binary.
-- [ ] Add Dockerfile for easy deployment.
-- [ ] Documentation for usage and deployment.
+- [x] Embed frontend build into the Go binary.
+- [x] Add Dockerfile for easy deployment.
+- [x] GitHub Actions for CI/CD and Docker publishing.
+- [x] Documentation for usage and deployment.

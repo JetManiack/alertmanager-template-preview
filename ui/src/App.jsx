@@ -8,10 +8,11 @@ import { yaml } from '@codemirror/lang-yaml';
 import { StreamLanguage } from '@codemirror/language';
 import { go } from '@codemirror/legacy-modes/mode/go';
 import { vscodeDark, vscodeLight } from '@uiw/codemirror-theme-vscode';
-import { SunFill, MoonStarsFill, ExclamationTriangleFill } from 'react-bootstrap-icons';
+import { SunFill, MoonStarsFill, ExclamationTriangleFill, ShareFill, CheckLg } from 'react-bootstrap-icons';
 import jsYaml from 'js-yaml';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import LZString from 'lz-string';
 import { createTemplateCompletionSource } from './completions';
 
 const DEFAULT_AM_DATA = JSON.stringify({
@@ -39,15 +40,40 @@ const DEFAULT_PROM_DATA = JSON.stringify({
 }, null, 2);
 
 function App() {
+  const savedState = useMemo(() => {
+    const hash = window.location.hash.substring(1);
+    if (hash) {
+      try {
+        const decompressed = LZString.decompressFromEncodedURIComponent(hash);
+        if (decompressed) return JSON.parse(decompressed);
+      } catch (e) {
+        console.error("Failed to parse state from URL", e);
+      }
+    }
+    return null;
+  }, []);
+
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
-  const [mode, setMode] = useState(localStorage.getItem('activeMode') || 'alertmanager');
+  const [mode, setMode] = useState(savedState?.m || localStorage.getItem('activeMode') || 'alertmanager');
   
-  const [amTemplate, setAmTemplate] = useState(localStorage.getItem('amTemplate') || '{{ .CommonLabels.alertname }}');
-  const [amData, setAmData] = useState(localStorage.getItem('amData') || DEFAULT_AM_DATA);
+  const [amTemplate, setAmTemplate] = useState(() => {
+    if (savedState?.m === 'alertmanager') return savedState.t;
+    return localStorage.getItem('amTemplate') || '{{ .CommonLabels.alertname }}';
+  });
+  const [amData, setAmData] = useState(() => {
+    if (savedState?.m === 'alertmanager') return savedState.d;
+    return localStorage.getItem('amData') || DEFAULT_AM_DATA;
+  });
   
-  const [promTemplate, setPromTemplate] = useState(localStorage.getItem('promTemplate') || 'Alert {{ .Labels.alertname }} value is {{ .Value | humanize }}');
-  const [promData, setPromData] = useState(localStorage.getItem('promData') || DEFAULT_PROM_DATA);
-  const [previewMode, setPreviewMode] = useState(localStorage.getItem('previewMode') || 'text');
+  const [promTemplate, setPromTemplate] = useState(() => {
+    if (savedState?.m === 'prometheus') return savedState.t;
+    return localStorage.getItem('promTemplate') || 'Alert {{ .Labels.alertname }} value is {{ .Value | humanize }}';
+  });
+  const [promData, setPromData] = useState(() => {
+    if (savedState?.m === 'prometheus') return savedState.d;
+    return localStorage.getItem('promData') || DEFAULT_PROM_DATA;
+  });
+  const [previewMode, setPreviewMode] = useState(savedState?.p || localStorage.getItem('previewMode') || 'text');
   
   const currentTemplate = mode === 'alertmanager' ? amTemplate : promTemplate;
   const currentData = mode === 'alertmanager' ? amData : promData;
@@ -56,6 +82,7 @@ function App() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [dataError, setDataError] = useState(null);
+  const [shareStatus, setShareStatus] = useState('idle'); // idle, copied
 
   // Parse template error to get location
   const templateError = useMemo(() => {
@@ -178,6 +205,25 @@ function App() {
     else setPromData(val);
   };
 
+  const handleShare = () => {
+    const state = {
+      m: mode,
+      t: currentTemplate,
+      d: currentData,
+      p: previewMode
+    };
+    const compressed = LZString.compressToEncodedURIComponent(JSON.stringify(state));
+    const url = `${window.location.origin}${window.location.pathname}#${compressed}`;
+    
+    navigator.clipboard.writeText(url).then(() => {
+      setShareStatus('copied');
+      setTimeout(() => setShareStatus('idle'), 2000);
+    }).catch(err => {
+      console.error('Failed to copy: ', err);
+      window.location.hash = compressed;
+    });
+  };
+
   const { defaultLayout: horizontalLayout, onLayoutChanged: onHorizontalLayoutChanged } = useDefaultLayout({ id: "horizontal-layout" });
   const { defaultLayout: verticalLayout, onLayoutChanged: onVerticalLayoutChanged } = useDefaultLayout({ id: "vertical-layout" });
 
@@ -196,9 +242,28 @@ function App() {
               </Nav.Item>
             </Nav>
           </div>
-          <button className="theme-toggle" onClick={toggleTheme} title="Toggle Dark/Light Mode">
-            {theme === 'light' ? <MoonStarsFill size={18} /> : <SunFill size={18} />}
-          </button>
+          <div className="d-flex align-items-center">
+            <button 
+              className={`share-btn me-3 ${shareStatus === 'copied' ? 'success' : ''}`} 
+              onClick={handleShare} 
+              title="Copy Shareable Link"
+            >
+              {shareStatus === 'copied' ? (
+                <>
+                  <CheckLg size={16} className="me-1" />
+                  <small>Copied!</small>
+                </>
+              ) : (
+                <>
+                  <ShareFill size={14} className="me-1" />
+                  <small>Share</small>
+                </>
+              )}
+            </button>
+            <button className="theme-toggle" onClick={toggleTheme} title="Toggle Dark/Light Mode">
+              {theme === 'light' ? <MoonStarsFill size={18} /> : <SunFill size={18} />}
+            </button>
+          </div>
         </div>
       </header>
 

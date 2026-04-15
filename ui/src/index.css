@@ -64,6 +64,30 @@ body, html, #root {
   color: var(--bs-body-color);
 }
 
+.share-btn {
+  background-color: var(--bs-primary);
+  color: white;
+  border: none;
+  padding: 4px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+}
+
+.share-btn:hover {
+  filter: brightness(0.9);
+}
+
+.share-btn.success {
+  background-color: var(--bs-success);
+}
+
+.share-btn small {
+  font-weight: 600;
+}
+
 .main-container {
   height: calc(100vh - 40px);
   display: flex;

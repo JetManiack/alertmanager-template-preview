@@ -55,6 +55,10 @@ This is a structured Knowledge Base for the Alertmanager Template Preview projec
     - **Markdown**: Renders the result as Markdown using `react-markdown` and `remark-gfm`.
     - **Persistence**: The selected `previewMode` is saved in `localStorage`.
     - **Layout**: Added a compact `Nav` switcher in the "Result" pane header to toggle between modes.
+- **Shareable Links**: Implemented a "Share" feature that allows users to share the current state (template, data, mode, preview mode) via URL.
+    - **Compression**: Uses `lz-string` (`compressToEncodedURIComponent`) to encode the JSON-serialized state into the URL hash. This keeps the URL relatively short even for complex templates.
+    - **Initialization**: Upon loading, the application checks the URL hash. If a valid state is found, it overrides `localStorage` values for that session's initial state.
+    - **UI**: Added a "Share" button in the header with a "Copied!" confirmation status.
 - **Dockerization**: Implemented a multi-stage Dockerfile to simplify deployment.
     - **Stage 1 (Frontend)**: Uses `node:lts-alpine` to build the React application.
     - **Stage 2 (Backend)**: Uses `golang:1.26-alpine` to build the Go server, incorporating the built UI assets from Stage 1 into the `assets/ui/dist` directory.
