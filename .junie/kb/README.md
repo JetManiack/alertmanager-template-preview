@@ -12,6 +12,7 @@ This is a structured Knowledge Base for the Alertmanager Template Preview projec
 - **Gin Static Serving**: When using `r.StaticFS("/ui", ...)` and a redirect from `/` to `/ui/`, ensure no conflicting routes like `r.GET("/ui/", ...)` are manually registered, as `StaticFS` already handles directory root requests.
 - **Vite Base Path**: When serving the UI under a prefix (e.g., `/ui`), the `base` configuration in `vite.config.js` must match that prefix (e.g., `base: '/ui/'`). Otherwise, the browser will attempt to load assets from the root path, leading to 404 errors.
 - **Code Editor**: Replaced standard `textarea` with `CodeMirror 6` (via `@uiw/react-codemirror`) to provide syntax highlighting, line numbers, and better user experience.
+- **Text Preview Wrapping**: To ensure long lines are wrapped in the "Text" preview mode, added `white-space: pre-wrap;` and `word-break: break-all;` to the `pre` tag inside `.preview-result.text-mode`. This also ensures that newlines from the template are correctly preserved while preventing horizontal overflow.
 - **Syntax Highlighting**:
     - **YAML/JSON**: Uses `@codemirror/lang-yaml` for "Alert Data" field (YAML is a superset of JSON).
     - **Go Templates**: Implemented a custom `gotemplate` mode using `StreamLanguage` to properly handle template tags `{{ ... }}`. Unlike the standard Go language mode, this custom mode:

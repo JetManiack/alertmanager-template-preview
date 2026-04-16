@@ -159,11 +159,13 @@ body, html, #root {
   line-height: 1;
 }
 
-.preview-result.text-mode {
+.preview-result.text-mode pre {
   padding: 15px;
   font-family: 'Courier New', Courier, monospace;
   font-size: 13px;
   white-space: pre-wrap;
+  word-break: break-all;
+  color: inherit;
 }
 
 .preview-result.html-mode, .preview-result.markdown-mode {
