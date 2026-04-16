@@ -6,7 +6,7 @@ import CodeMirror from '@uiw/react-codemirror';
 import { autocompletion } from '@codemirror/autocomplete';
 import { yaml } from '@codemirror/lang-yaml';
 import { StreamLanguage } from '@codemirror/language';
-import { go } from '@codemirror/legacy-modes/mode/go';
+import { gotemplate } from './gotemplate';
 import { vscodeDark, vscodeLight } from '@uiw/codemirror-theme-vscode';
 import { SunFill, MoonStarsFill, ExclamationTriangleFill, ShareFill, CheckLg } from 'react-bootstrap-icons';
 import jsYaml from 'js-yaml';
@@ -150,7 +150,7 @@ function App() {
 
   const templateExtensions = useMemo(() => {
     return [
-      StreamLanguage.define(go),
+      StreamLanguage.define(gotemplate),
       autocompletion({ override: [createTemplateCompletionSource(parsedData, mode)] })
     ];
   }, [parsedData, mode]);

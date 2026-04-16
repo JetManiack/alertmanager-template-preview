@@ -14,7 +14,11 @@ This is a structured Knowledge Base for the Alertmanager Template Preview projec
 - **Code Editor**: Replaced standard `textarea` with `CodeMirror 6` (via `@uiw/react-codemirror`) to provide syntax highlighting, line numbers, and better user experience.
 - **Syntax Highlighting**:
     - **YAML/JSON**: Uses `@codemirror/lang-yaml` for "Alert Data" field (YAML is a superset of JSON).
-    - **Go Templates**: Uses `@codemirror/legacy-modes/mode/go` as a close approximation for highlighting.
+    - **Go Templates**: Implemented a custom `gotemplate` mode using `StreamLanguage` to properly handle template tags `{{ ... }}`. Unlike the standard Go language mode, this custom mode:
+        - Treats text outside `{{ ... }}` as plain text (preventing `//` in URLs from being incorrectly highlighted as comments).
+        - Supports template-specific comments `{{/* ... */}}`.
+        - Supports whitespace control tags `{{-` and `-}}`.
+        - Highlights keywords (`if`, `else`, `range`, etc.) and variables starting with a dot specifically within tags.
 - **Theme Switching**: Implemented using Bootstrap 5's `data-bs-theme` attribute and CodeMirror's theme system (`@uiw/codemirror-theme-vscode`). Theme preference is persisted in `localStorage`.
 - **Persistence**: Editor contents (`template` and `alertData`) and UI theme are persisted in `localStorage` to preserve user progress between page refreshes.
 - **Error Highlighting**:
@@ -102,6 +106,10 @@ This is a structured Knowledge Base for the Alertmanager Template Preview projec
     - **User feedback**: The version is displayed in the startup logs and via the `--version` flag.
 
 ### Known Issues & Solutions
+- **Template Error: `index of untyped nil`**:
+    - **Symptom**: Rendering fails with `error calling index: index of untyped nil`.
+    - **Cause**: Using `{{ template "name" }}` without passing context (`.`). Inside the called template, `.` becomes `nil`. Calling `index .Alerts 0` on a nil context where the type of `.Alerts` cannot be inferred leads to this error.
+    - **Fix**: Always pass context to nested templates: `{{ template "name" . }}`.
 - **404 on Assets in Production**:
     - **Symptom**: UI loads but assets (`/assets/index-...`) return 404.
     - **Cause**: Assets are linked relative to the root, but the server is set up to serve them under `/ui`.
