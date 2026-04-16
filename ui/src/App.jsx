@@ -13,6 +13,7 @@ import jsYaml from 'js-yaml';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import LZString from 'lz-string';
+import DOMPurify from 'dompurify';
 import { createTemplateCompletionSource } from './completions';
 
 const DEFAULT_AM_DATA = JSON.stringify({
@@ -362,7 +363,7 @@ function App() {
                       <pre className="mb-0">{result || '(empty output)'}</pre>
                     )}
                     {previewMode === 'html' && (
-                      <div className="html-preview" dangerouslySetInnerHTML={{ __html: result || '<i>(empty output)</i>' }} />
+                      <div className="html-preview" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(result || '<i>(empty output)</i>') }} />
                     )}
                     {previewMode === 'markdown' && (
                       <div className="markdown-preview">

@@ -56,6 +56,9 @@ This is a structured Knowledge Base for the Alertmanager Template Preview projec
     - **Persistence**: The selected `previewMode` is saved in `localStorage`.
     - **Layout**: Added a compact `Nav` switcher in the "Result" pane header to toggle between modes.
 - **Dynamic Page Title**: The browser tab title updates automatically when switching between "Alertmanager" and "Prometheus" modes to provide clear context (e.g., "Alertmanager Template Preview").
+- **Security**:
+    - **XSS Prevention (HTML Mode)**: Integrated `dompurify` to sanitize HTML output in the "HTML" preview mode. This prevents Cross-Site Scripting (XSS) attacks from malicious templates, especially when shared via URL links.
+    - **Markdown Safety**: The "Markdown" preview mode uses `react-markdown`, which is safe by default and does not render raw HTML.
 - **Shareable Links**: Implemented a "Share" feature that allows users to share the current state (template, data, mode, preview mode) via URL.
     - **Compression**: Uses `lz-string` (`compressToEncodedURIComponent`) to encode the JSON-serialized state into the URL hash. This keeps the URL relatively short even for complex templates.
     - **Initialization**: Upon loading, the application checks the URL hash. If a valid state is found, it overrides `localStorage` values for that session's initial state.
