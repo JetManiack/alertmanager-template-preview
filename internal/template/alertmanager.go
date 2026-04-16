@@ -1,6 +1,7 @@
 package template
 
 import (
+	"context"
 	"fmt"
 	tmplhtml "html/template"
 	tmpltext "text/template"
@@ -10,7 +11,7 @@ import (
 )
 
 // RenderAlertmanager parses and renders an Alertmanager notification template.
-func RenderAlertmanager(tmplStr string, dataStr string) (string, error) {
+func RenderAlertmanager(ctx context.Context, tmplStr string, dataStr string) (string, error) {
 	var data template.Data
 	if err := yaml.Unmarshal([]byte(dataStr), &data); err != nil {
 		return "", fmt.Errorf("failed to unmarshal alert data: %w", err)
@@ -39,5 +40,18 @@ func RenderAlertmanager(tmplStr string, dataStr string) (string, error) {
 		return "", fmt.Errorf("failed to initialize templates: %w", err)
 	}
 
-	return tmpl.ExecuteTextString(tmplStr, &data)
+	var res string
+	var execErr error
+	done := make(chan struct{})
+	go func() {
+		res, execErr = tmpl.ExecuteTextString(tmplStr, &data)
+		close(done)
+	}()
+
+	select {
+	case <-done:
+		return res, execErr
+	case <-ctx.Done():
+		return "", ctx.Err()
+	}
 }

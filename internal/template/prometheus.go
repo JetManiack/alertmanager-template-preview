@@ -2,6 +2,7 @@ package template
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -24,7 +25,7 @@ type PrometheusData struct {
 	Value          float64           `json:"value"`
 }
 
-func RenderPrometheus(tmplStr string, dataStr string, prometheusURL string) (string, error) {
+func RenderPrometheus(ctx context.Context, tmplStr string, dataStr string, prometheusURL string) (string, error) {
 	var data PrometheusData
 	if err := yaml.Unmarshal([]byte(dataStr), &data); err != nil {
 		return "", fmt.Errorf("failed to unmarshal alert data: %w", err)
@@ -59,7 +60,7 @@ func RenderPrometheus(tmplStr string, dataStr string, prometheusURL string) (str
 			if prometheusURL == "" {
 				return nil, fmt.Errorf("function 'query' requires a live Prometheus server (use --prometheus-url flag)")
 			}
-			return queryPrometheus(prometheusURL, q)
+			return queryPrometheus(ctx, prometheusURL, q)
 		},
 		"first": func(v any) (any, error) {
 			samples, ok := v.([]QueryResultSample)
@@ -113,12 +114,22 @@ func RenderPrometheus(tmplStr string, dataStr string, prometheusURL string) (str
 		return "", err
 	}
 
-	var buf bytes.Buffer
-	if err := tmpl.Execute(&buf, data); err != nil {
-		return "", err
-	}
+	var res string
+	var execErr error
+	done := make(chan struct{})
+	go func() {
+		var buf bytes.Buffer
+		execErr = tmpl.Execute(&buf, data)
+		res = buf.String()
+		close(done)
+	}()
 
-	return buf.String(), nil
+	select {
+	case <-done:
+		return res, execErr
+	case <-ctx.Done():
+		return "", ctx.Err()
+	}
 }
 
 type QueryResultSample struct {
@@ -136,7 +147,7 @@ type prometheusAPIResponse struct {
 	Error     string `json:"error"`
 }
 
-func queryPrometheus(baseURL, q string) ([]QueryResultSample, error) {
+func queryPrometheus(ctx context.Context, baseURL, q string) ([]QueryResultSample, error) {
 	u, err := url.Parse(baseURL)
 	if err != nil {
 		return nil, err
@@ -145,7 +156,11 @@ func queryPrometheus(baseURL, q string) ([]QueryResultSample, error) {
 	u.RawQuery = url.Values{"query": {q}}.Encode()
 
 	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Get(u.String())
+	req, err := http.NewRequestWithContext(ctx, "GET", u.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}

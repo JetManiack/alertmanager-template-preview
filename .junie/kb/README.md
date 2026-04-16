@@ -59,6 +59,11 @@ This is a structured Knowledge Base for the Alertmanager Template Preview projec
 - **Security**:
     - **XSS Prevention (HTML Mode)**: Integrated `dompurify` to sanitize HTML output in the "HTML" preview mode. This prevents Cross-Site Scripting (XSS) attacks from malicious templates, especially when shared via URL links.
     - **Markdown Safety**: The "Markdown" preview mode uses `react-markdown`, which is safe by default and does not render raw HTML.
+    - **DoS Protection (API)**: 
+        - **Request Body Limit**: The `/api/render` endpoint limits the request body size to **1MB** using `http.MaxBytesReader` to prevent memory exhaustion from oversized payloads.
+        - **Rendering Timeout**: A **5-second timeout** is enforced for all template rendering operations using `context.WithTimeout`. This prevents long-running or recursive templates from hanging the server and consuming CPU indefinitely.
+    - **SSRF Mitigation**: The backend proxy for Prometheus only communicates with the URL specified at startup via the `--prometheus-url` flag. It is not possible to change this target via API calls, which significantly reduces the risk of Server-Side Request Forgery.
+    - **Data Privacy (Shareable Links)**: Templates and data shared via URL hash are compressed using `lz-string`. Since this is a client-side operation, the data is never sent to the server unless the `/api/render` endpoint is explicitly called. However, these links should be treated as sensitive if the template contains private information, as the hash is visible in browser history and logs.
 - **Shareable Links**: Implemented a "Share" feature that allows users to share the current state (template, data, mode, preview mode) via URL.
     - **Compression**: Uses `lz-string` (`compressToEncodedURIComponent`) to encode the JSON-serialized state into the URL hash. This keeps the URL relatively short even for complex templates.
     - **Initialization**: Upon loading, the application checks the URL hash. If a valid state is found, it overrides `localStorage` values for that session's initial state.

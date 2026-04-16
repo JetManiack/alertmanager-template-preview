@@ -1,7 +1,9 @@
 package api
 
 import (
+	"context"
 	"net/http"
+	"time"
 
 	"github.com/JetManiack/alertmanager-template-preview/internal/template"
 	"github.com/gin-gonic/gin"
@@ -27,7 +29,10 @@ func RenderHandler(c *gin.Context, prometheusURL string) {
 		mode = "alertmanager"
 	}
 
-	result, err := template.Render(req.Template, req.Data, mode, prometheusURL)
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
+	defer cancel()
+
+	result, err := template.Render(ctx, req.Template, req.Data, mode, prometheusURL)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -47,6 +52,8 @@ func SetupRouter(prometheusURL string) *gin.Engine {
 	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	r.POST("/api/render", func(c *gin.Context) {
+		// Limit request body size to 1MB to prevent DoS
+		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 1024*1024)
 		RenderHandler(c, prometheusURL)
 	})
 

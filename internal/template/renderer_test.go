@@ -53,7 +53,7 @@ func TestRender(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := Render(tt.tmpl, tt.data, tt.mode, "")
+			got, err := Render(t.Context(), tt.tmpl, tt.data, tt.mode, "")
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Render() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -72,7 +72,7 @@ func TestRenderWithQuery(t *testing.T) {
 	defer ts.Close()
 
 	tmpl := `{{ with query "up" | first }}{{ .Labels.job }}: {{ .Value }}{{ end }}`
-	got, err := Render(tmpl, `{}`, "prometheus", ts.URL)
+	got, err := Render(t.Context(), tmpl, `{}`, "prometheus", ts.URL)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
@@ -89,7 +89,7 @@ func TestRenderWithQueryScalar(t *testing.T) {
 	defer ts.Close()
 
 	tmpl := `{{ query "time()" | first | value }}`
-	got, err := Render(tmpl, `{}`, "prometheus", ts.URL)
+	got, err := Render(t.Context(), tmpl, `{}`, "prometheus", ts.URL)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
@@ -101,7 +101,7 @@ func TestRenderWithQueryScalar(t *testing.T) {
 
 func TestRenderWithToTime(t *testing.T) {
 	tmpl := `{{ 1617181717.333 | toTime }}`
-	got, err := Render(tmpl, `{}`, "prometheus", "")
+	got, err := Render(t.Context(), tmpl, `{}`, "prometheus", "")
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}

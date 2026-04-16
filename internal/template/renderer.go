@@ -1,13 +1,15 @@
 package template
 
+import "context"
+
 // Render parses the template and renders it using the provided YAML/JSON data, based on the mode.
-func Render(tmplStr string, dataStr string, mode string, prometheusURL string) (string, error) {
+func Render(ctx context.Context, tmplStr string, dataStr string, mode string, prometheusURL string) (string, error) {
 	switch mode {
 	case "prometheus":
-		return RenderPrometheus(tmplStr, dataStr, prometheusURL)
+		return RenderPrometheus(ctx, tmplStr, dataStr, prometheusURL)
 	case "alertmanager":
-		return RenderAlertmanager(tmplStr, dataStr)
+		return RenderAlertmanager(ctx, tmplStr, dataStr)
 	default:
-		return RenderAlertmanager(tmplStr, dataStr)
+		return RenderAlertmanager(ctx, tmplStr, dataStr)
 	}
 }
