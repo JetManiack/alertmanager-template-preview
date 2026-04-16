@@ -63,6 +63,7 @@ This is a structured Knowledge Base for the Alertmanager Template Preview projec
 - **Dynamic Page Title**: The browser tab title updates automatically when switching between "Alertmanager" and "Prometheus" modes to provide clear context (e.g., "Alertmanager Template Preview").
 - **Security**:
     - **XSS Prevention (HTML Mode)**: Integrated `dompurify` to sanitize HTML output in the "HTML" preview mode. This prevents Cross-Site Scripting (XSS) attacks from malicious templates, especially when shared via URL links.
+        - **Configuration**: The sanitizer is configured with `ALLOWED_TAGS` and `ALLOWED_ATTR` to support common alert elements (links, tables, lists, basic formatting) while stripping dangerous elements like `<script>` or `<iframe>`. Specifically, `<a>` tags with `href` and `target="_blank"` are permitted to allow for functional links in alert previews.
     - **Markdown Safety**: The "Markdown" preview mode uses `react-markdown`, which is safe by default and does not render raw HTML.
     - **DoS Protection (API)**: 
         - **Request Body Limit**: The `/api/render` endpoint limits the request body size to **1MB** using `http.MaxBytesReader` to prevent memory exhaustion from oversized payloads.

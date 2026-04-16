@@ -363,7 +363,13 @@ function App() {
                       <pre className="mb-0">{result || '(empty output)'}</pre>
                     )}
                     {previewMode === 'html' && (
-                      <div className="html-preview" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(result || '<i>(empty output)</i>') }} />
+                      <div className="html-preview" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(result || '<i>(empty output)</i>', {
+                        ALLOWED_TAGS: [
+                          'a', 'b', 'strong', 'i', 'em', 'br', 'p', 'ul', 'ol', 'li', 'code', 'pre', 'span', 'div', 
+                          'table', 'thead', 'tbody', 'tr', 'th', 'td', 'img', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr'
+                        ],
+                        ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'src', 'alt', 'title', 'style', 'width', 'height'],
+                      }) }} />
                     )}
                     {previewMode === 'markdown' && (
                       <div className="markdown-preview">
