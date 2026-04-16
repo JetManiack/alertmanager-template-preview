@@ -122,6 +122,10 @@ This is a structured Knowledge Base for the Alertmanager Template Preview projec
     - **Fix**: 
         1. Remove `go.sum` from `.gitignore` and run `go mod tidy`.
         2. Create an empty `.keep` file in `assets/ui/dist/` and add an exception for it in `.gitignore` (`!assets/ui/dist/.keep`). This ensures the directory exists for `go:embed` even if the UI hasn't been built.
+- **Frontend Linting Errors (no-useless-escape)**:
+    - **Symptom**: `npm run lint` fails with `Unnecessary escape character: \[ no-useless-escape`.
+    - **Cause**: Using escapes for characters that don't need them inside a regex character class `[]` (like `\[`, `\(`, `\)`, `\.`).
+    - **Fix**: Removed unnecessary backslashes in `ui/src/gotemplate.js` to satisfy ESLint rules.
 - **Prometheus Query Mocking (Deprecated)**:
     - **Issue**: Initial attempt to implement `query` with manual mocks proved inflexible.
     - **Action**: Rolled back mock implementation in favor of a real backend proxy.
